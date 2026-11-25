@@ -45,6 +45,9 @@ export default async function HomePage() {
           <Link href="/timer" className="btn btn-ghost">
             Open the Timer
           </Link>
+          <Link href="/teleprompter" className="btn btn-ghost">
+            Open the Teleprompter
+          </Link>
         </div>
       </section>
 
@@ -85,6 +88,32 @@ export default async function HomePage() {
             </div>
           </div>
           <div className="card">
+            <span className="chip">Record</span>
+            <h3>Teleprompter</h3>
+            <p>
+              Pick a monologue or paste your own text, then record while the
+              script scrolls — with Wide, Medium and Close-up framing.
+            </p>
+            <div className="rowbtns">
+              <Link href="/teleprompter" className="btn btn-dark">
+                Open
+              </Link>
+            </div>
+          </div>
+          <div className="card">
+            <span className="chip">Record</span>
+            <h3>Studio</h3>
+            <p>
+              Camera Studio to record takes, plus My Private Recordings —
+              your saved takes, each with Play, Save to phone and Delete.
+            </p>
+            <div className="rowbtns">
+              <Link href="/studio" className="btn btn-dark">
+                Open
+              </Link>
+            </div>
+          </div>
+          <div className="card">
             <span className="chip">Progress</span>
             <h3>Analytics</h3>
             <p>
@@ -97,11 +126,102 @@ export default async function HomePage() {
               </Link>
             </div>
           </div>
+          <div className="card">
+            <span className="chip">Scripts</span>
+            <h3>Script Vault</h3>
+            <p>
+              Your private PDF scripts — upload, view, rename and send the
+              text to the Teleprompter.
+            </p>
+            <div className="rowbtns">
+              <Link href="/scripts" className="btn btn-dark">
+                Open
+              </Link>
+            </div>
+          </div>
+          <div className="card">
+            <span className="chip">Practise</span>
+            <h3>Monologues</h3>
+            <p>
+              14 original monologues to read and perform. Send any of them
+              straight to the Teleprompter.
+            </p>
+            <div className="rowbtns">
+              <Link href="/monologues" className="btn btn-dark">
+                Open
+              </Link>
+            </div>
+          </div>
+          <div className="card">
+            <span className="chip">Follow a plan</span>
+            <h3>Training Plans</h3>
+            <p>
+              7 guided plans plus your own custom plan. Enrol free — Rs 0.
+            </p>
+            <div className="rowbtns">
+              <Link href="/plans" className="btn btn-dark">
+                Open
+              </Link>
+            </div>
+          </div>
+          <div className="card">
+            <span className="chip">Ask</span>
+            <h3>AI Coach</h3>
+            <p>
+              Your acting coach in English or Urdu. Simple answers, one
+              practical exercise at a time.
+            </p>
+            <div className="rowbtns">
+              <Link href="/coach" className="btn btn-dark">
+                Open
+              </Link>
+            </div>
+          </div>
+          <div className="card">
+            <span className="chip">Progress</span>
+            <h3>Achievements</h3>
+            <p>
+              Badges earned from your real practice — minutes, sessions and
+              streaks. Nothing faked.
+            </p>
+            <div className="rowbtns">
+              <Link href="/achievements" className="btn btn-dark">
+                Open
+              </Link>
+            </div>
+          </div>
+          <div className="card">
+            <span className="chip">People</span>
+            <h3>Community</h3>
+            <p>
+              Actors helping actors. Share a win, a question, or a tip.
+            </p>
+            <div className="rowbtns">
+              <Link href="/community" className="btn btn-dark">
+                Open
+              </Link>
+            </div>
+          </div>
+          <div className="card">
+            <span className="chip">Work</span>
+            <h3>Audition Center</h3>
+            <p>
+              Find auditions or post one of your own — and apply in a few
+              taps.
+            </p>
+            <div className="rowbtns">
+              <Link href="/auditions" className="btn btn-dark">
+                Open
+              </Link>
+            </div>
+          </div>
         </div>
         <div className="note">
-          <strong>Phase 1:</strong> exercise library, practice timer, and
-          analytics with sign-in. Recording, Script Vault, Admin Panel, AI
-          Coach and payments are not part of this phase.
+          <strong>Everything is free right now (Rs 0):</strong> Script Vault,
+          Monologues, Training Plans, AI Coach, Achievements, Community and
+          Audition Center are all in. The Admin Panel is under{" "}
+          <Link href="/admin">Admin</Link> — the owner claims the first Super
+          Admin seat there.
         </div>
       </section>
 

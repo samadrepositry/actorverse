@@ -31,7 +31,17 @@ export default async function RootLayout({
             <nav className="nav" aria-label="Main">
               <Link href="/exercises">Exercises</Link>
               <Link href="/timer">Timer</Link>
+              <Link href="/teleprompter">Teleprompter</Link>
+              <Link href="/studio">Studio</Link>
+              <Link href="/scripts">Scripts</Link>
+              <Link href="/monologues">Monologues</Link>
+              <Link href="/plans">Plans</Link>
+              <Link href="/coach">AI Coach</Link>
               <Link href="/analytics">Analytics</Link>
+              <Link href="/achievements">Achievements</Link>
+              <Link href="/community">Community</Link>
+              <Link href="/auditions">Auditions</Link>
+              <Link href="/admin">Admin</Link>
               {user ? (
                 <SignOutButton />
               ) : (

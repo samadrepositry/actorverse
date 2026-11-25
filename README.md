@@ -29,6 +29,27 @@ Legend."* Black + gold theme, simple plain English, mobile-first.
   a "Forgot password?" flow. Requires the Supabase dashboard **Site URL**
   to be `https://actorverse.vercel.app` (and that URL in Redirect URLs).
 
+## Quality pass + Why ACTORVERSE (2026-11-25 update)
+
+- **Toast confirmations** (`src/components/Toast.tsx`): every save, delete,
+  enrol and post action now shows a short toast ("Take saved to Studio.",
+  "Enrolled — free.") on top of the inline message, so no action feels
+  silent. Mounted once in the root layout.
+- **Empty states**: "No saved takes yet", "No scripts yet", "No posts yet",
+  "No auditions yet", "No applications yet" and "No sessions yet" now
+  render as styled empty cards with a clear next step — never a blank
+  screen.
+- **Keyboard access**: visible gold focus outlines app-wide; Esc closes
+  the mobile sidebar drawer.
+- **Why ACTORVERSE section** on the home page: 8 cards built only from
+  real features (170 exercises / 10 departments, Teleprompter recording
+  with framing, private Script Vault, 14 monologues, 7 plans, AI Coach,
+  Analytics + Achievements, Community + Audition Center) and the honest
+  line "Everything is free right now — Rs 0." No testimonials, ratings
+  or fake stats anywhere.
+- **Hero fix**: the third hero stat duplicated "10 Departments" — it now
+  correctly shows "14 Monologues".
+
 ## Phase 1 scope
 
 - **Landing page** (`/`) — hero, stats, sign in / sign up.

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { createServerSupabaseClient } from "@/lib/supabase-server";
 import Sidebar from "@/components/Sidebar";
+import ToastHost from "@/components/Toast";
 
 export const metadata: Metadata = {
   title: "ACTORVERSE — Train Like an Athlete. Perform Like a Legend.",
@@ -23,6 +24,7 @@ export default async function RootLayout({
     <html lang="en">
       <body>
         <Sidebar signedIn={!!user} />
+        <ToastHost />
         <div className="app-shell">
           <main className="container">{children}</main>
           <footer>

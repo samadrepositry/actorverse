@@ -18,6 +18,7 @@ import {
   MAX_SCRIPT_BYTES,
 } from "@/lib/scripts";
 import type { ScriptRow } from "@/lib/scripts";
+import { showToast } from "@/components/Toast";
 
 function formatDate(iso: string): string {
   try {
@@ -99,6 +100,7 @@ export default function ScriptsPage() {
     setMessageOk(result.ok);
     setMessage(result.message);
     setUploading(false);
+    if (result.ok) showToast("Script uploaded.");
     if (result.ok) {
       setFile(null);
       setTitle("");
@@ -150,6 +152,7 @@ export default function ScriptsPage() {
     }
     setRenamingId(null);
     setMessage("Renamed.");
+    showToast("Renamed.");
     setMessageOk(true);
     await refreshList();
   }
@@ -168,6 +171,7 @@ export default function ScriptsPage() {
     }
     setMessage("Deleted.");
     setMessageOk(true);
+    showToast("Deleted.");
     await refreshList();
   }
 
@@ -244,8 +248,8 @@ export default function ScriptsPage() {
           <div className="card">
             <h3 style={{ marginTop: 0 }}>My scripts</h3>
             {scripts.length === 0 && (
-              <p className="sub">
-                No scripts yet. Upload your first PDF above.
+              <p className="empty">
+                <strong>No scripts yet.</strong>Upload your first PDF above.
               </p>
             )}
             {scripts.length > 0 && (

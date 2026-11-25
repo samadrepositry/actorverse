@@ -16,6 +16,7 @@ import {
   unenrol,
 } from "@/lib/plans";
 import type { EnrollmentRow } from "@/lib/plans";
+import { showToast } from "@/components/Toast";
 
 function formatDate(iso: string): string {
   try {
@@ -94,7 +95,10 @@ export default function PlansPage() {
     setBusyId(null);
     setMessageOk(result.ok);
     setMessage(result.message);
-    if (result.ok) void refreshList();
+    if (result.ok) {
+      void refreshList();
+      showToast("Enrolled — free.");
+    }
   }
 
   async function handleCustomEnrol() {
@@ -111,6 +115,7 @@ export default function PlansPage() {
     if (result.ok) {
       setCustomTitle("");
       void refreshList();
+      showToast("Your plan is ready — enrolled.");
     }
   }
 
@@ -125,6 +130,7 @@ export default function PlansPage() {
     }
     setMessageOk(true);
     setMessage("Left the plan.");
+    showToast("Left the plan.");
     void refreshList();
   }
 

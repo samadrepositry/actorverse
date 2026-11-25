@@ -15,6 +15,7 @@ import type { ShotSize } from "@/lib/recorder";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase";
 import { uploadTake } from "@/lib/recordings";
 import { getMyScript } from "@/lib/scripts";
+import { showToast } from "@/components/Toast";
 
 const SHOTS: { id: ShotSize; label: string; hint: string }[] = [
   { id: "wide", label: "Wide Shot", hint: "Full body, head to feet" },
@@ -205,6 +206,7 @@ function TeleprompterPageInner() {
     setSaveOk(result.ok);
     setSaveMessage(result.message);
     setSaving(false);
+    if (result.ok) showToast("Take saved to Studio.");
   }
 
   function handleSaveToPhone() {
@@ -212,6 +214,7 @@ function TeleprompterPageInner() {
     downloadBlob(lastTake.blob, takeFilename(title, lastTake.extension));
     setSaveOk(true);
     setSaveMessage("Saved to your phone. Check your downloads or gallery.");
+    showToast("Saved to your phone.");
   }
 
   return (

@@ -18,6 +18,7 @@ import {
   uploadTake,
 } from "@/lib/recordings";
 import type { RecordingRow } from "@/lib/recordings";
+import { showToast } from "@/components/Toast";
 
 const SHOTS: { id: ShotSize; label: string; hint: string }[] = [
   { id: "wide", label: "Wide Shot", hint: "Full body, head to feet" },
@@ -143,7 +144,10 @@ export default function StudioPage() {
     setSaveOk(result.ok);
     setSaveMessage(result.message);
     setSaving(false);
-    if (result.ok) void refreshList();
+    if (result.ok) {
+      void refreshList();
+      showToast("Take saved to your recordings.");
+    }
   }
 
   function handleSaveToPhone() {
@@ -151,6 +155,7 @@ export default function StudioPage() {
     downloadBlob(lastTake.blob, takeFilename(title, lastTake.extension));
     setSaveOk(true);
     setSaveMessage("Saved to your phone. Check your downloads or gallery.");
+    showToast("Saved to your phone.");
   }
 
   async function handlePlay(row: RecordingRow) {
@@ -182,6 +187,7 @@ export default function StudioPage() {
       const ext = row.storage_path.split(".").pop() || "mp4";
       await downloadFromUrl(url, takeFilename(row.title, ext));
       setListNote("Saved to your phone. Check your downloads or gallery.");
+      showToast("Saved to your phone.");
     } catch {
       setListNote("Download failed. Check your connection and try again.");
     } finally {
@@ -206,6 +212,7 @@ export default function StudioPage() {
       setPlayingUrl(null);
     }
     setRecordings((prev) => prev.filter((r) => r.id !== row.id));
+    showToast("Take deleted.");
   }
 
   return (
@@ -396,7 +403,7 @@ export default function StudioPage() {
           </p>
         )}
         {signedIn === true && recordings.length === 0 && (
-          <p className="sub">No saved takes yet. Record one above and tap Save online.</p>
+          <p className="empty"><strong>No saved takes yet.</strong>Record one above and tap Save online.</p>
         )}
         {signedIn === true && recordings.length > 0 && (
           <ul className="session-list">

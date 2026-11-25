@@ -16,6 +16,7 @@ import {
   listMyApplications,
 } from "@/lib/community";
 import type { ApplicationRow, AuditionRow } from "@/lib/community";
+import { showToast } from "@/components/Toast";
 
 function formatDate(iso: string): string {
   try {
@@ -97,6 +98,7 @@ export default function AuditionsPage() {
       setLocation("");
       setDeadline("");
       await refreshAll();
+      showToast("Audition posted.");
     }
   }
 
@@ -110,6 +112,7 @@ export default function AuditionsPage() {
       setApplyingId(null);
       setApplyMessage("");
       await refreshAll();
+      showToast("Application sent.");
     }
   }
 
@@ -127,6 +130,7 @@ export default function AuditionsPage() {
     }
     setMessageOk(true);
     setMessage("Deleted.");
+    showToast("Deleted.");
     await refreshAll();
   }
 
@@ -215,8 +219,8 @@ export default function AuditionsPage() {
           <div className="card" style={{ marginBottom: 14 }}>
             <h3 style={{ marginTop: 0 }}>Open auditions</h3>
             {auditions.length === 0 && (
-              <p className="sub">
-                No auditions yet. Post the first one above.
+              <p className="empty">
+                <strong>No auditions yet.</strong>Post the first one above.
               </p>
             )}
             {auditions.length > 0 && (
@@ -322,7 +326,7 @@ export default function AuditionsPage() {
                     {viewingAppsId === aud.id && (
                       <div style={{ marginTop: 10 }}>
                         {viewingApps.length === 0 ? (
-                          <p className="sub">No applications yet.</p>
+                          <p className="empty"><strong>No applications yet.</strong></p>
                         ) : (
                           <ul className="session-list">
                             {viewingApps.map((app) => (

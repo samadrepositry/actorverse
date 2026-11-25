@@ -8,6 +8,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase";
 import { createPost, deleteMyPost, listPosts } from "@/lib/community";
 import type { PostWithAuthor } from "@/lib/community";
+import { showToast } from "@/components/Toast";
 
 function formatDate(iso: string): string {
   try {
@@ -70,6 +71,7 @@ export default function CommunityPage() {
     if (result.ok) {
       setBody("");
       await refreshList();
+      showToast("Posted.");
     }
   }
 
@@ -85,6 +87,7 @@ export default function CommunityPage() {
     }
     setMessageOk(true);
     setMessage("Deleted.");
+    showToast("Post deleted.");
     await refreshList();
   }
 
@@ -133,8 +136,8 @@ export default function CommunityPage() {
           <div className="card">
             <h3 style={{ marginTop: 0 }}>Latest posts</h3>
             {posts.length === 0 && (
-              <p className="sub">
-                No posts yet. Be the first to share something.
+              <p className="empty">
+                <strong>No posts yet.</strong>Be the first to share something.
               </p>
             )}
             {posts.length > 0 && (

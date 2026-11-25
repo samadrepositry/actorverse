@@ -226,7 +226,10 @@ export default async function AnalyticsPage() {
       <div className="card" style={{ marginTop: 14 }}>
         <h3>Recent sessions</h3>
         {sessions.length === 0 ? (
-          <p>No sessions yet. Use the timer to log your first practice.</p>
+          <p className="empty">
+            <strong>No sessions yet.</strong>Use the timer to log your first
+            practice.
+          </p>
         ) : (
           <ul className="session-list">
             {sessions.slice(0, 20).map((s) => (

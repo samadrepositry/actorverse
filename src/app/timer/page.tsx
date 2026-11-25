@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase";
+import { showToast } from "@/components/Toast";
 
 const PRESETS = [1, 2, 5, 10, 15];
 
@@ -87,6 +88,7 @@ function TimerContent() {
       });
       if (error) throw error;
       setSaved("Done — session saved to your progress.");
+      showToast("Session saved.");
     } catch (err) {
       setSaved(
         `Session finished, but it could not be saved: ${

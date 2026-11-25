@@ -34,8 +34,8 @@ export default async function HomePage() {
             <span>Departments</span>
           </div>
           <div className="hstat">
-            <b>10</b>
-            <span>Departments</span>
+            <b>14</b>
+            <span>Monologues</span>
           </div>
         </div>
         <div className="hero-cta">
@@ -48,6 +48,84 @@ export default async function HomePage() {
           <Link href="/teleprompter" className="btn btn-ghost">
             Open the Teleprompter
           </Link>
+        </div>
+      </section>
+
+      <section className="section">
+        <h2>Why ACTORVERSE?</h2>
+        <p className="sub">
+          One app for the whole craft — practice, record, track and find
+          work, without paying for five different tools.
+        </p>
+        <div className="why-grid">
+          <Link href="/exercises" className="card why-card">
+            <span className="why-num">1</span>
+            <h3>Train every skill</h3>
+            <p>
+              170 exercises across 10 departments — voice, body, emotion,
+              camera craft and more, each with a built-in timer.
+            </p>
+          </Link>
+          <Link href="/teleprompter" className="card why-card">
+            <span className="why-num">2</span>
+            <h3>Record with the Teleprompter</h3>
+            <p>
+              Your script scrolls while the camera records — with Wide,
+              Medium and Close-up framing, so the take looks right.
+            </p>
+          </Link>
+          <Link href="/scripts" className="card why-card">
+            <span className="why-num">3</span>
+            <h3>Your private Script Vault</h3>
+            <p>
+              Your PDF scripts live in your own private vault — upload, view
+              and send the text straight to the Teleprompter.
+            </p>
+          </Link>
+          <Link href="/monologues" className="card why-card">
+            <span className="why-num">4</span>
+            <h3>14 original monologues</h3>
+            <p>
+              Fourteen monologues written for this app. Read one, practise
+              it, and send it to the Teleprompter in one tap.
+            </p>
+          </Link>
+          <Link href="/plans" className="card why-card">
+            <span className="why-num">5</span>
+            <h3>7 training plans</h3>
+            <p>
+              Follow a guided plan or build your own — pick a department,
+              minutes a day and weeks, and enrol free.
+            </p>
+          </Link>
+          <Link href="/coach" className="card why-card">
+            <span className="why-num">6</span>
+            <h3>AI Coach</h3>
+            <p>
+              Your acting coach in English or Urdu — one practical exercise
+              at a time, based on what you ask.
+            </p>
+          </Link>
+          <Link href="/analytics" className="card why-card">
+            <span className="why-num">7</span>
+            <h3>See your progress</h3>
+            <p>
+              Analytics, weekly goals and badges earned from your real
+              practice — minutes, sessions and streaks, nothing faked.
+            </p>
+          </Link>
+          <Link href="/community" className="card why-card">
+            <span className="why-num">8</span>
+            <h3>Actors helping actors</h3>
+            <p>
+              Share wins and questions in the Community, and find or post
+              auditions in the Audition Center.
+            </p>
+          </Link>
+        </div>
+        <div className="note">
+          <strong>Everything is free right now — Rs 0.</strong> No trial, no
+          card, no paywall. Every feature above is included.
         </div>
       </section>
 

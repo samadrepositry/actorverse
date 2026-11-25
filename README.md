@@ -8,6 +8,27 @@ Legend."* Black + gold theme, simple plain English, mobile-first.
 > at the repo root (served via GitHub Pages) — that file is separate from
 > the app code below and must not be deleted.
 
+## Navigation + theme (2026-11-25 update)
+
+- **Sidebar navigation** (`src/components/Sidebar.tsx`): fixed left sidebar
+  on desktop, slide-in drawer with a hamburger top bar on mobile. Order:
+  Dashboard, Exercises, Timer, Teleprompter, Studio, Scripts, Monologues,
+  Plans, AI Coach, Analytics, Achievements, Community, Auditions, then
+  Admin under a divider, Sign out pinned at the bottom. Active page is
+  highlighted in gold.
+- **Color refresh**: same black + gold identity, now premium — deeper warm
+  near-black surfaces, a warm gold gradient on headings, buttons, progress
+  bars and active states, soft shadows on cards.
+- **Auth / email links** (`src/app/auth/callback/route.ts`): sign-up
+  confirmation and password-reset emails link to `/auth/callback`, which
+  exchanges the Supabase code for a session and sends the user to the
+  Dashboard (or to `/auth/reset-password` for recovery links). Sign-up
+  passes `emailRedirectTo` to the live site, so links never point at
+  localhost. Signing up with an already-registered email shows a plain
+  message with Sign in / Reset password options, and the sign-in form has
+  a "Forgot password?" flow. Requires the Supabase dashboard **Site URL**
+  to be `https://actorverse.vercel.app` (and that URL in Redirect URLs).
+
 ## Phase 1 scope
 
 - **Landing page** (`/`) — hero, stats, sign in / sign up.

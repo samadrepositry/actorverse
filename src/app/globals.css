@@ -1,17 +1,24 @@
-/* ACTORVERSE — black + gold theme, mobile-first, plain English. */
+/* ACTORVERSE — black + gold theme, mobile-first, plain English.
+   Premium refresh: deeper warm near-black surfaces, richer gold with a
+   warm gradient on headings, buttons and accents. */
 :root {
-  --bg: #0d0b08;
-  --bg-soft: #171310;
-  --surface: #1e1812;
-  --surface-2: #2a221a;
-  --ink: #f5edd8;
-  --ink-2: #cbbd97;
-  --line: #3a2f22;
-  --gold: #e8c766;
-  --gold-dark: #b8860b;
+  --bg: #0a0805;
+  --bg-soft: #12100a;
+  --surface: #1b1610;
+  --surface-2: #2a2214;
+  --ink: #f8f0da;
+  --ink-2: #d6c69c;
+  --line: #43351f;
+  --line-soft: #33291a;
+  --gold: #f2c94c;
+  --gold-2: #e0a92e;
+  --gold-deep: #b07d10;
+  --gold-gradient: linear-gradient(135deg, #f8d97a 0%, #f2c94c 45%, #dfa52a 100%);
+  --gold-text: linear-gradient(120deg, #fbe28a 0%, #f2c94c 50%, #e8b23a 100%);
   --red: #c1272d;
   --green: #4cc983;
   --radius: 14px;
+  --sidebar-w: 264px;
 }
 
 * {
@@ -24,7 +31,10 @@ html {
 
 body {
   margin: 0;
-  background: var(--bg);
+  background:
+    radial-gradient(900px 480px at 85% -10%, rgba(242, 201, 76, 0.07), transparent 60%),
+    radial-gradient(700px 420px at -10% 30%, rgba(242, 201, 76, 0.05), transparent 55%),
+    var(--bg);
   color: var(--ink);
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   font-size: 16px;
@@ -60,44 +70,207 @@ button {
   padding: 0 16px 64px;
 }
 
-/* Header / nav */
-.site-header {
-  border-bottom: 1px solid var(--line);
-  background: var(--bg-soft);
+/* App shell: content sits beside the fixed sidebar on desktop,
+   below the mobile top bar on phones. */
+.app-shell {
+  min-height: 100vh;
+  padding-top: 60px;
 }
-.site-header-inner {
-  max-width: 1080px;
-  margin: 0 auto;
-  padding: 12px 16px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
+@media (min-width: 900px) {
+  .app-shell {
+    padding-top: 0;
+    margin-left: var(--sidebar-w);
+  }
 }
+
+/* Brand wordmark */
 .brand {
   font-weight: 800;
   letter-spacing: 0.28em;
   font-size: 1.05rem;
+  background: var(--gold-text);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
   color: var(--gold);
   text-decoration: none;
 }
-.nav {
+
+/* Sidebar (desktop) / drawer (mobile) */
+.sidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  width: min(300px, 84vw);
+  height: 100dvh;
+  z-index: 60;
   display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-  margin-left: auto;
+  flex-direction: column;
+  background: linear-gradient(180deg, #161209 0%, #100d07 100%);
+  border-right: 1px solid var(--line-soft);
+  transform: translateX(-102%);
+  transition: transform 0.25s ease;
+  overflow-y: auto;
 }
-.nav a {
+.sidebar.open {
+  transform: translateX(0);
+}
+@media (min-width: 900px) {
+  .sidebar {
+    width: var(--sidebar-w);
+    transform: none;
+    transition: none;
+  }
+}
+.sidebar-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 20px 14px;
+  border-bottom: 1px solid var(--line-soft);
+}
+.sidebar-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--ink-2);
+  font-size: 1.1rem;
+}
+@media (min-width: 900px) {
+  .sidebar-close {
+    display: none;
+  }
+}
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 14px 12px;
+  flex: 1;
+}
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 46px;
+  padding: 10px 12px;
+  border-radius: 12px;
   color: var(--ink-2);
   text-decoration: none;
-  padding: 10px 14px;
-  border-radius: 999px;
   font-weight: 600;
+  font-size: 0.95rem;
+  border: 1px solid transparent;
+  transition: background 0.15s ease, color 0.15s ease;
 }
-.nav a:hover,
-.nav a.active {
+.sidebar-link:hover {
   background: var(--surface-2);
   color: var(--ink);
+}
+.sidebar-link.active {
+  background: linear-gradient(90deg, rgba(242, 201, 76, 0.22), rgba(242, 201, 76, 0.07));
+  border-color: rgba(242, 201, 76, 0.35);
+  color: var(--gold);
+  box-shadow: inset 3px 0 0 var(--gold);
+}
+.sidebar-icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+}
+.sidebar-icon svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.sidebar-divider {
+  height: 1px;
+  background: var(--line-soft);
+  margin: 12px 8px;
+}
+.sidebar-foot {
+  padding: 14px 12px 20px;
+  border-top: 1px solid var(--line-soft);
+}
+.sidebar-signout {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 46px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-decoration: none;
+  cursor: pointer;
+}
+.sidebar-signout:hover {
+  background: var(--surface-2);
+}
+
+/* Mobile top bar */
+.topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  background: rgba(16, 13, 7, 0.92);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--line-soft);
+}
+@media (min-width: 900px) {
+  .topbar {
+    display: none;
+  }
+}
+.hamburger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--gold);
+  font-size: 1.4rem;
+}
+.topbar-brand {
+  font-size: 0.95rem;
+}
+.topbar-spacer {
+  flex: 1;
+}
+.sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 55;
+  border: 0;
+  background: rgba(0, 0, 0, 0.6);
+  cursor: pointer;
+}
+@media (min-width: 900px) {
+  .sidebar-overlay {
+    display: none;
+  }
 }
 
 /* Hero */
@@ -111,6 +284,10 @@ button {
   margin: 0.3em 0 0.2em;
 }
 .hero h1 em {
+  background: var(--gold-text);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
   color: var(--gold);
   font-style: normal;
 }
@@ -128,11 +305,12 @@ button {
   margin: 26px 0 6px;
 }
 .hstat {
-  background: var(--surface);
+  background: linear-gradient(180deg, var(--surface) 0%, var(--bg-soft) 100%);
   border: 1px solid var(--line);
   border-radius: 12px;
   padding: 10px 16px;
   min-width: 104px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
 }
 .hstat b {
   display: block;
@@ -167,8 +345,9 @@ button {
   text-decoration: none;
 }
 .btn-gold {
-  background: var(--gold);
+  background: var(--gold-gradient);
   color: #241a02;
+  box-shadow: 0 6px 18px rgba(242, 201, 76, 0.25);
 }
 .btn-ghost {
   background: transparent;
@@ -203,10 +382,11 @@ button {
   gap: 14px;
 }
 .card {
-  background: var(--surface);
+  background: linear-gradient(180deg, var(--surface) 0%, var(--bg-soft) 100%);
   border: 1px solid var(--line);
   border-radius: var(--radius);
   padding: 18px;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.3);
 }
 .card h3 {
   margin: 0 0 6px;
@@ -274,7 +454,7 @@ h2 {
   font-size: 0.85rem;
 }
 .fbtn[aria-pressed="true"] {
-  background: var(--gold);
+  background: var(--gold-gradient);
   border-color: var(--gold);
   color: #241a02;
 }
@@ -350,7 +530,7 @@ h2 {
   color: var(--ink);
 }
 .preset[aria-pressed="true"] {
-  background: var(--gold);
+  background: var(--gold-gradient);
   border-color: var(--gold);
   color: #241a02;
 }
@@ -365,7 +545,7 @@ h2 {
 .prog i {
   display: block;
   height: 100%;
-  background: var(--gold);
+  background: var(--gold-gradient);
 }
 
 /* Phase 2 — Teleprompter + Studio */
@@ -390,7 +570,7 @@ h2 {
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: var(--gold);
+  background: var(--gold-gradient);
   color: #241a02;
   font-size: 0.8rem;
   margin-right: 6px;
@@ -583,7 +763,7 @@ h2 {
 .bar-col .bar {
   width: 100%;
   max-width: 44px;
-  background: var(--gold);
+  background: var(--gold-gradient);
   border-radius: 6px 6px 0 0;
   min-height: 3px;
 }
@@ -609,7 +789,7 @@ h2 {
 .progress-row .track i {
   display: block;
   height: 100%;
-  background: var(--gold);
+  background: var(--gold-gradient);
 }
 .session-list {
   list-style: none;
@@ -647,10 +827,11 @@ footer {
   margin-top: 18px;
 }
 .badge {
-  background: var(--surface);
+  background: linear-gradient(180deg, var(--surface) 0%, var(--bg-soft) 100%);
   border: 1px solid var(--line);
   border-radius: var(--radius);
   padding: 18px;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.3);
 }
 .badge h3 {
   margin: 0 0 6px;

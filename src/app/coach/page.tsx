@@ -12,6 +12,23 @@ interface ChatMsg {
   text: string;
 }
 
+// Render **bold** and line breaks in a coach reply, without any raw HTML
+// from the model: the text is split into plain segments and React renders
+// them, so nothing from the model ever becomes markup.
+function renderRich(text: string) {
+  return text.split("\n").map((line, li) => (
+    <span key={li} style={{ display: "block" }}>
+      {line.split(/(\*\*[^*]+\*\*)/g).map((part, pi) =>
+        part.startsWith("**") && part.endsWith("**") && part.length > 4 ? (
+          <strong key={pi}>{part.slice(2, -2)}</strong>
+        ) : (
+          <span key={pi}>{part}</span>
+        ),
+      )}
+    </span>
+  ));
+}
+
 const STARTERS: { en: string; ur: string }[] = [
   {
     en: "How do I stop feeling nervous before an audition?",
@@ -34,7 +51,63 @@ export default function CoachPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notConnected, setNotConnected] = useState(false);
+  const [translating, setTranslating] = useState(false);
+  const [translateNote, setTranslateNote] = useState<string | null>(null);
   const listRef = useRef<HTMLDivElement | null>(null);
+
+  // Switch the chat language and translate the existing coach answers into
+  // the new language, so the whole conversation switches — not just new
+  // questions. The user's own messages are left exactly as written and
+  // are never translated. If a translation fails, that answer stays in its
+  // original language and a small note says so.
+  async function switchLanguage(target: "en" | "ur") {
+    if (target === language || translating || busy) return;
+    setLanguage(target);
+    setTranslateNote(null);
+    const coachIndexes = messages
+      .map((m, i) => (m.role === "coach" ? i : -1))
+      .filter((i) => i >= 0);
+    if (coachIndexes.length === 0) return;
+    setTranslating(true);
+    try {
+      const translated = await Promise.all(
+        coachIndexes.map(async (i) => {
+          try {
+            const res = await fetch("/api/translate", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ text: messages[i].text, target }),
+            });
+            const data = await res.json();
+            if (!res.ok || typeof data?.text !== "string" || !data.text.trim()) {
+              return null;
+            }
+            return data.text as string;
+          } catch {
+            return null;
+          }
+        }),
+      );
+      let failed = false;
+      const next = messages.map((m, i) => {
+        const pos = coachIndexes.indexOf(i);
+        if (pos < 0) return m;
+        if (translated[pos] === null) {
+          failed = true;
+          return m;
+        }
+        return { ...m, text: translated[pos] as string };
+      });
+      setMessages(next);
+      if (failed) {
+        setTranslateNote(
+          "Translation did not work — the original answer is shown.",
+        );
+      }
+    } finally {
+      setTranslating(false);
+    }
+  }
 
   async function send(text: string) {
     const clean = text.trim();
@@ -90,7 +163,8 @@ export default function CoachPage() {
           type="button"
           className="fbtn"
           aria-pressed={language === "en"}
-          onClick={() => setLanguage("en")}
+          disabled={translating || busy}
+          onClick={() => void switchLanguage("en")}
         >
           English
         </button>
@@ -98,11 +172,23 @@ export default function CoachPage() {
           type="button"
           className="fbtn"
           aria-pressed={language === "ur"}
-          onClick={() => setLanguage("ur")}
+          disabled={translating || busy}
+          onClick={() => void switchLanguage("ur")}
         >
           اردو
         </button>
       </div>
+
+      {translating && (
+        <p className="sub" role="status" style={{ marginTop: 0 }}>
+          Translating…
+        </p>
+      )}
+      {translateNote && (
+        <p className="note" role="status" style={{ marginTop: 0 }}>
+          {translateNote}
+        </p>
+      )}
 
       <div className="card">
         <div className="chat-log" ref={listRef}>
@@ -119,7 +205,11 @@ export default function CoachPage() {
               className={`chat-msg ${m.role === "user" ? "chat-user" : "chat-coach"}`}
             >
               <strong>{m.role === "user" ? "You" : "Coach"}</strong>
-              <p>{m.text}</p>
+              {m.role === "coach" ? (
+                <p>{renderRich(m.text)}</p>
+              ) : (
+                <p>{m.text}</p>
+              )}
             </div>
           ))}
           {busy && (

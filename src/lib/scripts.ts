@@ -2,10 +2,13 @@
 // Scripts upload to the private `scripts` Storage bucket and one row is
 // written to the public.scripts table. Everything is own-rows-only: a user
 // can only see, open, rename and delete their own scripts. PDF only,
-// max about 10 MB. An optional pasted script text can be saved with the
-// PDF so it can be sent to the Teleprompter.
+// max about 10 MB. The words are read out of the PDF automatically at
+// upload (pdf.js, in the browser) and saved as the script text, so
+// tapping the PDF in the Teleprompter puts its words straight in the
+// reading box. A pasted text, if given, wins over the extracted one.
 
 import { createClient, isSupabaseConfigured } from "./supabase";
+import { extractPdfText } from "./pdfText";
 
 export const SCRIPTS_BUCKET = "scripts";
 export const MAX_SCRIPT_BYTES = 10 * 1024 * 1024; // about 10 MB
@@ -23,6 +26,8 @@ export interface ScriptResult {
   ok: boolean;
   message: string;
   row?: ScriptRow;
+  /** True when the text was read out of the PDF automatically. */
+  textExtracted?: boolean;
 }
 
 function friendlyUploadError(message: string): string {
@@ -89,13 +94,32 @@ export async function uploadScript(
     if (uploadError) {
       return { ok: false, message: friendlyUploadError(uploadError.message) };
     }
+    // No pasted text? Read the words out of the PDF itself, so tapping
+    // it in the Teleprompter later is instant. Extraction never blocks
+    // the upload: if it fails, the file is saved with no text and the
+    // Teleprompter can try reading it again when it is tapped.
+    let textToSave: string | null = scriptText.trim()
+      ? scriptText.trim()
+      : null;
+    let textExtracted = false;
+    if (!textToSave) {
+      try {
+        const extracted = await extractPdfText(await file.arrayBuffer());
+        if (extracted) {
+          textToSave = extracted;
+          textExtracted = true;
+        }
+      } catch {
+        // Saved with no text — see the note above.
+      }
+    }
     const { data, error: insertError } = await supabase
       .from("scripts")
       .insert({
         user_id: user.id,
         title: cleanTitle,
         storage_path: path,
-        script_text: scriptText.trim() ? scriptText.trim() : null,
+        script_text: textToSave,
       })
       .select("id, user_id, title, storage_path, script_text, created_at")
       .single();
@@ -116,12 +140,41 @@ export async function uploadScript(
         message: `The PDF uploaded, but its entry could not be saved: ${insertError.message}.`,
       };
     }
-    return { ok: true, message: "Script saved.", row: data as ScriptRow };
+    return {
+      ok: true,
+      message: textExtracted
+        ? "Script saved. The text was read from the PDF automatically."
+        : "Script saved.",
+      row: data as ScriptRow,
+      textExtracted,
+    };
   } catch (err) {
     return {
       ok: false,
       message: `Upload failed: ${err instanceof Error ? err.message : "unknown error"}.`,
     };
+  }
+}
+
+/**
+ * Save extracted text for a script row, so the Teleprompter can load it
+ * instantly next time. Used after the Teleprompter reads a PDF that had
+ * no saved text yet. Returns true on success.
+ */
+export async function saveScriptText(
+  id: string,
+  text: string,
+): Promise<boolean> {
+  if (!isSupabaseConfigured()) return false;
+  try {
+    const supabase = createClient();
+    const { error } = await supabase
+      .from("scripts")
+      .update({ script_text: text })
+      .eq("id", id);
+    return !error;
+  } catch {
+    return false;
   }
 }
 

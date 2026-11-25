@@ -223,15 +223,15 @@ export default function ScriptsPage() {
               </div>
               <div>
                 <label htmlFor="script-text">
-                  Script text (optional) — paste the words here to send them
-                  to the Teleprompter later
+                  Script text (optional) — paste the words here, or leave it
+                  empty and the app will read the text from the PDF itself
                 </label>
                 <textarea
                   id="script-text"
                   rows={4}
                   value={scriptText}
                   onChange={(e) => setScriptText(e.target.value)}
-                  placeholder="Paste the script text here (optional)…"
+                  placeholder="Paste the script text here (optional — otherwise the PDF is read automatically)…"
                 />
               </div>
               <button
@@ -312,14 +312,12 @@ export default function ScriptsPage() {
                         >
                           Download
                         </button>
-                        {row.script_text && (
-                          <Link
-                            href={`/teleprompter?script=${row.id}`}
-                            className="btn btn-gold"
-                          >
-                            Send to Teleprompter
-                          </Link>
-                        )}
+                        <Link
+                          href={`/teleprompter?script=${row.id}`}
+                          className="btn btn-gold"
+                        >
+                          Send to Teleprompter
+                        </Link>
                         <button
                           type="button"
                           className="btn btn-line"

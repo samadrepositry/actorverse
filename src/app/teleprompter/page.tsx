@@ -1,8 +1,10 @@
 // ACTORVERSE — Teleprompter (Phase 2)
-// Pick a monologue or paste your own text, then one tap on RECORD starts
-// the camera and the script scroll together. A second tap stops and saves
-// the take. The take is always downloadable to the phone; signing in also
-// saves it online to Studio → My Private Recordings.
+// Pick a monologue, paste your own text, tap one of your PDFs (its words
+// are read out of the PDF and put straight in the reading box), or scan
+// a page — then one tap on RECORD starts the camera and the script
+// scroll together. A second tap stops and saves the take. The take is
+// always downloadable to the phone; signing in also saves it online to
+// Studio → My Private Recordings.
 
 "use client";
 
@@ -14,7 +16,14 @@ import { downloadBlob } from "@/lib/recorder";
 import type { ShotSize } from "@/lib/recorder";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase";
 import { uploadTake } from "@/lib/recordings";
-import { getMyScript, listMyScripts, type ScriptRow } from "@/lib/scripts";
+import {
+  getMyScript,
+  listMyScripts,
+  saveScriptText,
+  signedScriptUrl,
+  type ScriptRow,
+} from "@/lib/scripts";
+import { extractPdfTextFromUrl } from "@/lib/pdfText";
 import { showToast } from "@/components/Toast";
 
 const SHOTS: { id: ShotSize; label: string; hint: string }[] = [
@@ -73,6 +82,7 @@ function TeleprompterPageInner() {
   const [pdfsLoading, setPdfsLoading] = useState(false);
   const [selectedPdfId, setSelectedPdfId] = useState<string | null>(null);
   const [pdfNote, setPdfNote] = useState<string | null>(null);
+  const [pdfBusy, setPdfBusy] = useState(false);
   const [scanImage, setScanImage] = useState<string | null>(null);
   const [scanStatus, setScanStatus] = useState<string | null>(null);
   const [scanBusy, setScanBusy] = useState(false);
@@ -110,7 +120,9 @@ function TeleprompterPageInner() {
   }, []);
 
   // Deep links: ?monologue=<id> from the Monologues page, or
-  // ?script=<id> from the Script Vault (loads the saved script text).
+  // ?script=<id> from the Script Vault (reads the PDF's text into the
+  // reading box — saved text if there is any, otherwise straight out of
+  // the PDF file itself).
   useEffect(() => {
     const monoId = searchParams.get("monologue");
     if (monoId) {
@@ -129,11 +141,7 @@ function TeleprompterPageInner() {
       let cancelled = false;
       (async () => {
         const row = await getMyScript(scriptId);
-        if (!cancelled && row?.script_text) {
-          setUseOwn(true);
-          setOwnText(row.script_text);
-          setTitle(row.title);
-        }
+        if (!cancelled && row) void pickPdf(row);
       })();
       return () => {
         cancelled = true;
@@ -189,19 +197,54 @@ function TeleprompterPageInner() {
     setPdfsLoading(false);
   }
 
-  /** Tap a saved PDF: load its saved text into the Teleprompter. */
-  function pickPdf(row: ScriptRow) {
+  /**
+   * Tap a saved PDF: its words go straight into the reading box.
+   * Saved text (pasted at upload, or read from the PDF before) loads
+   * instantly. Otherwise the text is read out of the PDF file itself
+   * in the browser, then saved back so the next tap is instant.
+   */
+  async function pickPdf(row: ScriptRow) {
+    if (pdfBusy) return;
     setSelectedPdfId(row.id);
+    setSaveMessage(null);
     if (row.script_text?.trim()) {
       setOwnText(row.script_text);
       setUseOwn(true);
       setTitle(row.title);
       setPdfNote(null);
-      setSaveMessage(null);
-    } else {
+      return;
+    }
+    setPdfBusy(true);
+    setPdfNote("PDF text nikaal raha hoon…");
+    try {
+      const url = await signedScriptUrl(row.storage_path);
+      if (!url) throw new Error("Could not open the PDF.");
+      const text = await extractPdfTextFromUrl(url);
+      if (!text) {
+        setPdfNote(
+          "Is PDF mein readable text nahi hai — ye scanned photo lagti hai. 'Scan a page' se photo lo.",
+        );
+        return;
+      }
+      setOwnText(text);
+      setUseOwn(true);
+      setTitle(row.title);
+      setPdfNote(null);
+      // Save it back so the next tap is instant.
+      const saved = await saveScriptText(row.id, text);
+      if (saved) {
+        setPdfs((prev) =>
+          prev?.map((p) =>
+            p.id === row.id ? { ...p, script_text: text } : p,
+          ) ?? null,
+        );
+      }
+    } catch {
       setPdfNote(
-        "This PDF has no typed text saved. Open it in Scripts and add the text, or paste the text in the Paste script tab.",
+        "PDF text nahi nikaal saka. Dobara try karein, ya Paste script tab mein text paste karein.",
       );
+    } finally {
+      setPdfBusy(false);
     }
   }
 
@@ -419,7 +462,8 @@ function TeleprompterPageInner() {
                     type="button"
                     className="fbtn"
                     aria-pressed={selectedPdfId === p.id}
-                    onClick={() => pickPdf(p)}
+                    disabled={pdfBusy}
+                    onClick={() => void pickPdf(p)}
                   >
                     {p.title}
                   </button>

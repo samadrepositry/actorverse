@@ -4,6 +4,9 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
+import { NAV_ACCENTS } from "@/lib/theme";
+import type { CSSProperties } from "react";
+
 type NavItem = { href: string; label: string; icon: string };
 
 /* Simple inline SVG icons (stroke style, no emoji). */
@@ -101,20 +104,29 @@ export default function Sidebar({ signedIn }: { signedIn: boolean }) {
 
   const navList = (
     <nav className="sidebar-nav" aria-label="Main">
-      {MAIN_NAV.map((item) => (
-        <Link
-          key={item.href}
-          href={item.href}
-          className={
-            "sidebar-link" + (isActive(pathname, item.href) ? " active" : "")
-          }
-          aria-current={isActive(pathname, item.href) ? "page" : undefined}
-          onClick={() => setOpen(false)}
-        >
-          <span className="sidebar-icon">{ICONS[item.icon]}</span>
-          {item.label}
-        </Link>
-      ))}
+      {MAIN_NAV.map((item) => {
+        const accent = NAV_ACCENTS[item.icon];
+        return (
+          <Link
+            key={item.href}
+            href={item.href}
+            className={
+              "sidebar-link" + (isActive(pathname, item.href) ? " active" : "")
+            }
+            aria-current={isActive(pathname, item.href) ? "page" : undefined}
+            onClick={() => setOpen(false)}
+            style={
+              {
+                "--nav-accent": accent.color,
+                "--nav-soft": accent.soft,
+              } as CSSProperties
+            }
+          >
+            <span className="sidebar-icon">{ICONS[item.icon]}</span>
+            {item.label}
+          </Link>
+        );
+      })}
       <div className="sidebar-divider" aria-hidden="true" />
       <Link
         href={ADMIN_NAV.href}
@@ -124,6 +136,12 @@ export default function Sidebar({ signedIn }: { signedIn: boolean }) {
         }
         aria-current={isActive(pathname, ADMIN_NAV.href) ? "page" : undefined}
         onClick={() => setOpen(false)}
+        style={
+          {
+            "--nav-accent": NAV_ACCENTS.admin.color,
+            "--nav-soft": NAV_ACCENTS.admin.soft,
+          } as CSSProperties
+        }
       >
         <span className="sidebar-icon">{ICONS[ADMIN_NAV.icon]}</span>
         {ADMIN_NAV.label}

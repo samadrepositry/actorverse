@@ -173,7 +173,7 @@ export default function AdminPage() {
 
   if (loading) {
     return (
-      <section className="section">
+      <section className="section" data-page="admin">
         <h2>Admin Panel</h2>
         <p className="sub">Loading…</p>
       </section>
@@ -181,7 +181,7 @@ export default function AdminPage() {
   }
 
   return (
-    <section className="section">
+    <section className="section" data-page="admin">
       <h2>Admin Panel</h2>
       <p className="sub">
         Run the app: people, roles and subscription settings. Only admins
@@ -221,7 +221,13 @@ export default function AdminPage() {
             disabled={busy}
             onClick={() => void handleClaim()}
           >
-            {busy ? "Please wait…" : "I am the owner — make me Super Admin"}
+            {busy ? (
+              <>
+                <span className="spinner" aria-hidden="true" /> Please wait…
+              </>
+            ) : (
+              "I am the owner — make me Super Admin"
+            )}
           </button>
         </div>
       )}
@@ -328,7 +334,13 @@ export default function AdminPage() {
                 disabled={busy || myRole !== "Super Admin"}
                 onClick={() => void handleSaveSettings()}
               >
-                {busy ? "Saving…" : "Save settings"}
+                {busy ? (
+                  <>
+                    <span className="spinner" aria-hidden="true" /> Saving…
+                  </>
+                ) : (
+                  "Save settings"
+                )}
               </button>
             </div>
           </div>

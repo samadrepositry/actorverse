@@ -169,7 +169,7 @@ export default function CoachPage() {
   }
 
   return (
-    <section className="section">
+    <section className="section" data-page="coach">
       <h2>AI Coach</h2>
       <p className="sub">
         Ask your acting coach anything — voice, body, camera, auditions.
@@ -244,7 +244,10 @@ export default function CoachPage() {
             </div>
           ))}
           {busy && (
-            <p className="sub">Coach is thinking…</p>
+            <p className="sub">
+              <span className="spinner spinner-light" aria-hidden="true" />{" "}
+              Coach is thinking…
+            </p>
           )}
         </div>
         <div className="form" style={{ marginTop: 12 }}>
@@ -270,7 +273,13 @@ export default function CoachPage() {
             disabled={busy || !input.trim()}
             onClick={() => void send(input)}
           >
-            {busy ? "Thinking…" : "Ask the Coach"}
+            {busy ? (
+              <>
+                <span className="spinner" aria-hidden="true" /> Thinking…
+              </>
+            ) : (
+              "Ask the Coach"
+            )}
           </button>
         </div>
         {error && (

@@ -357,7 +357,7 @@ function TeleprompterPageInner() {
   }
 
   return (
-    <section className="section">
+    <section className="section" data-page="teleprompter">
       <h2>Teleprompter</h2>
       <p className="sub">
         Read your script while the camera records. One tap starts the camera
@@ -621,7 +621,14 @@ function TeleprompterPageInner() {
                 disabled={cameraBusy || recording}
                 onClick={() => void openCamera(facing, shot)}
               >
-                {cameraBusy ? "Opening camera…" : "Open camera"}
+                {cameraBusy ? (
+                  <>
+                    <span className="spinner" aria-hidden="true" /> Opening
+                    camera…
+                  </>
+                ) : (
+                  "Open camera"
+                )}
               </button>
             </div>
           )}
@@ -741,7 +748,7 @@ function TeleprompterPageInner() {
 
       <button
         type="button"
-        className="record-btn"
+        className={"record-btn" + (recording ? " recording" : "")}
         disabled={cameraBusy}
         onClick={() => void handleRecordToggle()}
       >
@@ -789,7 +796,13 @@ function TeleprompterPageInner() {
               disabled={saving}
               onClick={() => void handleSaveOnline()}
             >
-              {saving ? "Saving…" : "Save online"}
+              {saving ? (
+                <>
+                  <span className="spinner" aria-hidden="true" /> Saving…
+                </>
+              ) : (
+                "Save online"
+              )}
             </button>
             <button
               type="button"

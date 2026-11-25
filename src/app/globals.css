@@ -1053,3 +1053,290 @@ body {
   font-size: 0.95rem;
   margin-bottom: 10px;
 }
+
+/* ============================================================
+   UI POLISH — animations, colourful accents, satisfying taps.
+   Gold stays the brand; per-section accents come from CSS vars
+   (--dept / --dept-soft / --nav-accent / --nav-soft / --page-accent)
+   set inline by the components that know their section.
+   ============================================================ */
+
+/* Keyframes */
+@keyframes pageIn {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(12px) scale(0.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes popIn {
+  0% { opacity: 0; transform: scale(0.6); }
+  70% { transform: scale(1.12); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes msgIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes pulseSoft {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.03); }
+}
+@keyframes recGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(193, 39, 45, 0.55), 0 6px 18px rgba(193, 39, 45, 0.35); }
+  50% { box-shadow: 0 0 0 10px rgba(193, 39, 45, 0), 0 6px 26px rgba(193, 39, 45, 0.5); }
+}
+@keyframes heroGlow {
+  0%, 100% { box-shadow: 0 6px 18px rgba(242, 201, 76, 0.25); }
+  50% { box-shadow: 0 6px 30px rgba(242, 201, 76, 0.45); }
+}
+
+/* Page enter — every route fades and rises gently. */
+main > section {
+  animation: pageIn 0.45s cubic-bezier(0.22, 0.8, 0.32, 1) both;
+}
+main > section:nth-child(2) { animation-delay: 0.05s; }
+main > section:nth-child(3) { animation-delay: 0.1s; }
+main > section:nth-child(4) { animation-delay: 0.15s; }
+
+/* Staggered card entrances. */
+.grid > *,
+.badge-grid > *,
+.why-grid > *,
+.hero-stats > * {
+  animation: cardIn 0.5s cubic-bezier(0.22, 0.8, 0.32, 1) both;
+}
+.grid > *:nth-child(2), .badge-grid > *:nth-child(2), .why-grid > *:nth-child(2), .hero-stats > *:nth-child(2) { animation-delay: 0.05s; }
+.grid > *:nth-child(3), .badge-grid > *:nth-child(3), .why-grid > *:nth-child(3), .hero-stats > *:nth-child(3) { animation-delay: 0.1s; }
+.grid > *:nth-child(4), .badge-grid > *:nth-child(4), .why-grid > *:nth-child(4) { animation-delay: 0.15s; }
+.grid > *:nth-child(5), .badge-grid > *:nth-child(5), .why-grid > *:nth-child(5) { animation-delay: 0.2s; }
+.grid > *:nth-child(6), .badge-grid > *:nth-child(6), .why-grid > *:nth-child(6) { animation-delay: 0.25s; }
+.grid > *:nth-child(7), .badge-grid > *:nth-child(7), .why-grid > *:nth-child(7) { animation-delay: 0.3s; }
+.grid > *:nth-child(8), .badge-grid > *:nth-child(8), .why-grid > *:nth-child(8) { animation-delay: 0.35s; }
+.grid > *:nth-child(n+9) { animation-delay: 0.4s; }
+
+/* Satisfying taps — every pressable element shrinks a touch and
+   (for gold buttons) glows. Hover lifts slightly on desktop. */
+.btn, .fbtn, .preset, .source-tab, .sidebar-link, .sidebar-signout,
+.record-btn, .hamburger, .sidebar-close {
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease,
+    border-color 0.2s ease,
+    filter 0.15s ease,
+    color 0.15s ease;
+}
+.btn:active:not(:disabled),
+.fbtn:active:not(:disabled),
+.preset:active:not(:disabled),
+.source-tab:active:not(:disabled),
+.sidebar-link:active,
+.sidebar-signout:active,
+.record-btn:active:not(:disabled) {
+  transform: scale(0.96);
+}
+.btn-gold:hover:not(:disabled) {
+  animation: heroGlow 1.8s ease-in-out infinite;
+}
+.btn-gold:active:not(:disabled) {
+  transform: scale(0.95);
+}
+.sidebar-link:hover {
+  transform: translateX(2px);
+}
+.card, .badge {
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+.card:hover, .badge:hover {
+  border-color: rgba(242, 201, 76, 0.45);
+}
+.why-card:hover {
+  transform: translateY(-2px);
+}
+
+/* Loading spinner for busy buttons (gold buttons: dark spinner;
+   dark/line buttons: light spinner). */
+.spinner {
+  display: inline-block;
+  width: 15px;
+  height: 15px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  border: 2px solid rgba(36, 26, 2, 0.3);
+  border-top-color: #241a02;
+  animation: spin 0.7s linear infinite;
+  vertical-align: -2px;
+}
+.spinner-light {
+  border-color: rgba(248, 240, 218, 0.3);
+  border-top-color: var(--ink);
+}
+
+/* Smooth progress motion. */
+.prog i { transition: width 0.5s ease; }
+.progress-row .track i {
+  transition: width 0.6s ease;
+  background: var(--dept, var(--gold-gradient));
+}
+.bar-col .bar { transition: height 0.7s ease; }
+.timer-face .big { transition: transform 0.3s ease; }
+.card.timer-running {
+  box-shadow:
+    0 0 0 1px rgba(95, 214, 138, 0.45),
+    0 8px 30px rgba(95, 214, 138, 0.16);
+}
+.card.timer-running .big {
+  animation: pulseSoft 1.6s ease-in-out infinite;
+}
+.record-btn.recording {
+  animation: recGlow 1.4s ease-in-out infinite;
+}
+
+/* Chat messages slide in; coach bubbles get a soft gold tint. */
+.chat-msg {
+  animation: msgIn 0.3s ease both;
+}
+
+/* Department chips — coloured per department via --dept vars. */
+.chip {
+  background: var(--dept-soft, #33290f);
+  color: var(--dept, var(--gold));
+}
+.fbtn[aria-pressed="true"] {
+  background: var(--dept, var(--gold));
+  border-color: var(--dept, var(--gold));
+  color: #241a02;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+}
+.preset[aria-pressed="true"],
+.source-tab[aria-pressed="true"] {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+}
+
+/* Sidebar icons — coloured per section via --nav-accent vars. */
+.sidebar-icon {
+  color: var(--nav-accent, var(--ink-2));
+}
+.sidebar-link.active {
+  background: linear-gradient(
+    90deg,
+    var(--nav-soft, rgba(242, 201, 76, 0.22)),
+    rgba(242, 201, 76, 0.07)
+  );
+  border-color: var(--nav-accent, rgba(242, 201, 76, 0.35));
+  color: var(--nav-accent, var(--gold));
+  box-shadow: inset 3px 0 0 var(--nav-accent, var(--gold));
+}
+.sidebar-link.active .sidebar-icon {
+  color: var(--nav-accent, var(--gold));
+}
+
+/* Page headers — a coloured accent bar under each page title,
+   in that page's section colour. */
+.section[data-page] > h2 {
+  position: relative;
+  padding-bottom: 12px;
+}
+.section[data-page] > h2::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 54px;
+  height: 4px;
+  border-radius: 99px;
+  background: var(--page-accent, var(--gold));
+  box-shadow: 0 0 14px var(--page-accent, var(--gold));
+}
+.section[data-page="dashboard"] { --page-accent: #f2c94c; }
+.section[data-page="exercises"] { --page-accent: #6ec1ff; }
+.section[data-page="timer"] { --page-accent: #5fd68a; }
+.section[data-page="teleprompter"] { --page-accent: #ffb454; }
+.section[data-page="studio"] { --page-accent: #ff7a9e; }
+.section[data-page="scripts"] { --page-accent: #b48cff; }
+.section[data-page="monologues"] { --page-accent: #4dd8c4; }
+.section[data-page="plans"] { --page-accent: #b8e05c; }
+.section[data-page="coach"] { --page-accent: #ff9a5c; }
+.section[data-page="analytics"] { --page-accent: #8fa8ff; }
+.section[data-page="achievements"] { --page-accent: #ff8fd1; }
+.section[data-page="community"] { --page-accent: #7ee0d2; }
+.section[data-page="auditions"] { --page-accent: #ff8f6b; }
+.section[data-page="admin"] { --page-accent: #f2c94c; }
+
+/* "Why" numbers take their card's section colour. */
+.why-num {
+  background: var(--section-accent, var(--gold-gradient));
+}
+
+/* Earned badges glow and pop. */
+.badge-earned {
+  box-shadow:
+    0 8px 22px rgba(0, 0, 0, 0.3),
+    0 0 26px rgba(242, 201, 76, 0.18);
+}
+.badge-earned .badge-icon {
+  animation: popIn 0.5s ease both;
+}
+
+/* Callout notes get a gold edge; empty states fade in. */
+.note {
+  border-left: 3px solid var(--gold);
+}
+.empty {
+  animation: cardIn 0.4s ease both;
+}
+
+/* Form fields glow gold on focus. */
+.form input:focus,
+.form textarea:focus,
+.form select:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(242, 201, 76, 0.22);
+  outline: none;
+}
+
+/* Hero stat numbers pop in. */
+.hstat b {
+  animation: popIn 0.5s ease both;
+}
+
+/* Respect users who prefer less motion. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Home — "Why" numbers take their card's section colour. */
+.section[data-page="dashboard"] .why-grid > *:nth-child(1) .why-num { background: #6ec1ff; }
+.section[data-page="dashboard"] .why-grid > *:nth-child(2) .why-num { background: #ffb454; }
+.section[data-page="dashboard"] .why-grid > *:nth-child(3) .why-num { background: #b48cff; }
+.section[data-page="dashboard"] .why-grid > *:nth-child(4) .why-num { background: #4dd8c4; }
+.section[data-page="dashboard"] .why-grid > *:nth-child(5) .why-num { background: #b8e05c; }
+.section[data-page="dashboard"] .why-grid > *:nth-child(6) .why-num { background: #ff9a5c; }
+.section[data-page="dashboard"] .why-grid > *:nth-child(7) .why-num { background: #8fa8ff; }
+.section[data-page="dashboard"] .why-grid > *:nth-child(8) .why-num { background: #7ee0d2; }
+
+/* Home — tool chips take their tool's section colour. */
+.section[data-page="dashboard"] .grid > *:nth-child(1) .chip { --dept: #6ec1ff; --dept-soft: rgba(110, 193, 255, 0.16); }
+.section[data-page="dashboard"] .grid > *:nth-child(2) .chip { --dept: #5fd68a; --dept-soft: rgba(95, 214, 138, 0.16); }
+.section[data-page="dashboard"] .grid > *:nth-child(3) .chip { --dept: #ffb454; --dept-soft: rgba(255, 180, 84, 0.16); }
+.section[data-page="dashboard"] .grid > *:nth-child(4) .chip { --dept: #ff7a9e; --dept-soft: rgba(255, 122, 158, 0.16); }
+.section[data-page="dashboard"] .grid > *:nth-child(5) .chip { --dept: #8fa8ff; --dept-soft: rgba(143, 168, 255, 0.16); }
+.section[data-page="dashboard"] .grid > *:nth-child(6) .chip { --dept: #b48cff; --dept-soft: rgba(180, 140, 255, 0.16); }
+.section[data-page="dashboard"] .grid > *:nth-child(7) .chip { --dept: #4dd8c4; --dept-soft: rgba(77, 216, 196, 0.16); }
+.section[data-page="dashboard"] .grid > *:nth-child(8) .chip { --dept: #b8e05c; --dept-soft: rgba(184, 224, 92, 0.16); }
+.section[data-page="dashboard"] .grid > *:nth-child(9) .chip { --dept: #ff9a5c; --dept-soft: rgba(255, 154, 92, 0.16); }
+.section[data-page="dashboard"] .grid > *:nth-child(10) .chip { --dept: #ff8fd1; --dept-soft: rgba(255, 143, 209, 0.16); }
+.section[data-page="dashboard"] .grid > *:nth-child(11) .chip { --dept: #7ee0d2; --dept-soft: rgba(126, 224, 210, 0.16); }
+.section[data-page="dashboard"] .grid > *:nth-child(12) .chip { --dept: #ff8f6b; --dept-soft: rgba(255, 143, 107, 0.16); }
+
+/* Monologues chips use the Monologues teal. */
+.section[data-page="monologues"] .chip { --dept: #4dd8c4; --dept-soft: rgba(77, 216, 196, 0.16); }

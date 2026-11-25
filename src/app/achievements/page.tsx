@@ -34,7 +34,7 @@ export default async function AchievementsPage() {
   const earned = summary.badges.filter((b) => b.earned).length;
 
   return (
-    <section className="section">
+    <section className="section" data-page="achievements">
       <h2>Achievements</h2>
       <p className="sub">
         Badges you earn by actually training. No shortcuts — practise, and

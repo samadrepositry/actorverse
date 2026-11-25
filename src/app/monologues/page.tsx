@@ -7,7 +7,7 @@ import { MONOLOGUES } from "@/data/monologues";
 
 export default function MonologuesPage() {
   return (
-    <section className="section">
+    <section className="section" data-page="monologues">
       <h2>Monologues</h2>
       <p className="sub">
         {MONOLOGUES.length} original monologues to practise with. Each takes

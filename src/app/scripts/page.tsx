@@ -205,7 +205,7 @@ export default function ScriptsPage() {
   }
 
   return (
-    <section className="section">
+    <section className="section" data-page="scripts">
       <h2>Script Vault</h2>
       <p className="sub">
         Your private PDF scripts. Only you can see them. PDF only, up to
@@ -269,11 +269,18 @@ export default function ScriptsPage() {
                 disabled={uploadStage !== "idle" || !file}
                 onClick={() => void handleUpload()}
               >
-                {uploadStage === "uploading"
-                  ? "Uploading file…"
-                  : uploadStage === "saving"
-                    ? "Saving…"
-                    : "Upload script"}
+                {uploadStage === "uploading" ? (
+                  <>
+                    <span className="spinner" aria-hidden="true" /> Uploading
+                    file…
+                  </>
+                ) : uploadStage === "saving" ? (
+                  <>
+                    <span className="spinner" aria-hidden="true" /> Saving…
+                  </>
+                ) : (
+                  "Upload script"
+                )}
               </button>
             </div>
           </div>
@@ -305,6 +312,10 @@ export default function ScriptsPage() {
                         className="sub"
                         style={{ marginTop: 4, marginBottom: 0 }}
                       >
+                        <span
+                          className="spinner spinner-light"
+                          aria-hidden="true"
+                        />{" "}
                         Reading text from the PDF…
                       </p>
                     )}

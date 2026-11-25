@@ -1,7 +1,9 @@
 import Link from "next/link";
+import type { CSSProperties } from "react";
 import { createServerSupabaseClient } from "@/lib/supabase-server";
 import { isSupabaseConfigured } from "@/lib/supabase-shared";
 import { DEPARTMENTS } from "@/data/exercises";
+import { deptAccent } from "@/lib/theme";
 import GoalSetter from "@/components/GoalSetter";
 
 interface SessionRow {
@@ -95,7 +97,7 @@ function BarChart({
 export default async function AnalyticsPage() {
   if (!isSupabaseConfigured()) {
     return (
-      <section className="section">
+      <section className="section" data-page="analytics">
         <h2>Analytics</h2>
         <p className="sub">Your practice, in numbers.</p>
         <div className="note">
@@ -114,7 +116,7 @@ export default async function AnalyticsPage() {
 
   if (!user) {
     return (
-      <section className="section">
+      <section className="section" data-page="analytics">
         <h2>Analytics</h2>
         <p className="sub">
           Sign in to see your practice minutes, streak, weekly goal and
@@ -157,7 +159,7 @@ export default async function AnalyticsPage() {
   const maxDeptMinutes = Math.max(1, ...byDepartment.values());
 
   return (
-    <section className="section">
+    <section className="section" data-page="analytics">
       <h2>Analytics</h2>
       <p className="sub">Your practice, in numbers.</p>
 
@@ -208,7 +210,12 @@ export default async function AnalyticsPage() {
             return (
               <div key={dept} className="progress-row">
                 <span>{dept}</span>
-                <div className="track">
+                <div
+                  className="track"
+                  style={
+                    { "--dept": deptAccent(dept).color } as CSSProperties
+                  }
+                >
                   <i style={{ width: `${(mins / maxDeptMinutes) * 100}%` }} />
                 </div>
                 <span>{mins} min</span>

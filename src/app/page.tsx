@@ -51,7 +51,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="section">
+      <section className="section" data-page="dashboard">
         <h2>Why ACTORVERSE?</h2>
         <p className="sub">
           One app for the whole craft — practice, record, track and find
@@ -129,7 +129,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="section">
+      <section className="section" data-page="dashboard">
         <h2>
           {user ? "Welcome back. Ready to train today?" : "Start training today"}
         </h2>

@@ -148,7 +148,7 @@ export default function AuditionsPage() {
   }
 
   return (
-    <section className="section">
+    <section className="section" data-page="auditions">
       <h2>Audition Center</h2>
       <p className="sub">
         Find auditions, or post one of your own. Apply with a short message.
@@ -211,7 +211,13 @@ export default function AuditionsPage() {
                 disabled={posting}
                 onClick={() => void handlePostAudition()}
               >
-                {posting ? "Posting…" : "Post audition"}
+                {posting ? (
+                  <>
+                    <span className="spinner" aria-hidden="true" /> Posting…
+                  </>
+                ) : (
+                  "Post audition"
+                )}
               </button>
             </div>
           </div>

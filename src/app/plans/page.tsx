@@ -5,10 +5,12 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import type { CSSProperties } from "react";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase";
 import { PLANS } from "@/data/plans";
 import { DEPARTMENTS } from "@/data/exercises";
 import type { Department } from "@/data/exercises";
+import { deptAccent } from "@/lib/theme";
 import {
   enrolCustomPlan,
   enrolPlan,
@@ -135,7 +137,7 @@ export default function PlansPage() {
   }
 
   return (
-    <section className="section">
+    <section className="section" data-page="plans">
       <h2>Training Plans</h2>
       <p className="sub">
         Follow a plan for a few weeks, a little every day. All plans are
@@ -152,7 +154,15 @@ export default function PlansPage() {
       <div className="grid">
         {PLANS.map((plan) => (
           <article key={plan.id} className="card">
-            <span className="chip">
+            <span
+              className="chip"
+              style={
+                {
+                  "--dept": deptAccent(plan.department).color,
+                  "--dept-soft": deptAccent(plan.department).soft,
+                } as CSSProperties
+              }
+            >
               {plan.department} · {plan.weeks} weeks
             </span>
             <h3>{plan.title}</h3>
@@ -195,7 +205,11 @@ export default function PlansPage() {
                 {enrolledIds.has(plan.id)
                   ? "Enrolled ✓"
                   : busyId === plan.id
-                    ? "Enrolling…"
+                    ? (
+                      <>
+                        <span className="spinner" aria-hidden="true" /> Enrolling…
+                      </>
+                    )
                     : "Enrol — free"}
               </button>
             </div>
@@ -271,7 +285,13 @@ export default function PlansPage() {
             disabled={signedIn !== true || busyId === "custom"}
             onClick={() => void handleCustomEnrol()}
           >
-            {busyId === "custom" ? "Saving…" : "Save my plan — free"}
+            {busyId === "custom" ? (
+              <>
+                <span className="spinner" aria-hidden="true" /> Saving…
+              </>
+            ) : (
+              "Save my plan — free"
+            )}
           </button>
         </div>
       </div>

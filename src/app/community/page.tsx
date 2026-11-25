@@ -92,7 +92,7 @@ export default function CommunityPage() {
   }
 
   return (
-    <section className="section">
+    <section className="section" data-page="community">
       <h2>Community</h2>
       <p className="sub">
         Actors helping actors. Share a win, a question, or a tip. Keep it
@@ -128,7 +128,13 @@ export default function CommunityPage() {
                 disabled={posting || !body.trim()}
                 onClick={() => void handlePost()}
               >
-                {posting ? "Posting…" : "Post"}
+                {posting ? (
+                  <>
+                    <span className="spinner" aria-hidden="true" /> Posting…
+                  </>
+                ) : (
+                  "Post"
+                )}
               </button>
             </div>
           </div>

@@ -132,13 +132,16 @@ function TimerContent() {
   const progress = total > 0 ? ((total - left) / total) * 100 : 0;
 
   return (
-    <section className="section">
+    <section className="section" data-page="timer">
       <h2>My Timer</h2>
       <p className="sub">
         For any exercise or rehearsal. Pick a time, press Start — when it
         finishes, it saves by itself.
       </p>
-      <div className="card" style={{ maxWidth: 640, margin: "0 auto" }}>
+      <div
+        className={"card" + (running ? " timer-running" : "")}
+        style={{ maxWidth: 640, margin: "0 auto" }}
+      >
         {exerciseTitle && (
           <p style={{ textAlign: "center", margin: "0 0 4px" }}>
             <strong>{exerciseTitle}</strong>

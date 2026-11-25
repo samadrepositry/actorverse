@@ -216,7 +216,7 @@ export default function StudioPage() {
   }
 
   return (
-    <section className="section">
+    <section className="section" data-page="studio">
       <h2>Studio</h2>
       <p className="sub">
         Record in front of the camera, then keep your takes here. Only you
@@ -279,7 +279,14 @@ export default function StudioPage() {
                 disabled={cameraBusy || recording}
                 onClick={() => void openCamera(facing, shot)}
               >
-                {cameraBusy ? "Opening camera…" : "Open camera"}
+                {cameraBusy ? (
+                  <>
+                    <span className="spinner" aria-hidden="true" /> Opening
+                    camera…
+                  </>
+                ) : (
+                  "Open camera"
+                )}
               </button>
             </div>
           )}
@@ -320,7 +327,7 @@ export default function StudioPage() {
 
         <button
           type="button"
-          className="record-btn"
+          className={"record-btn" + (recording ? " recording" : "")}
           disabled={cameraBusy}
           onClick={() => void handleRecordToggle()}
           style={{ marginTop: 14 }}
@@ -371,7 +378,13 @@ export default function StudioPage() {
                 disabled={saving}
                 onClick={() => void handleSaveOnline()}
               >
-                {saving ? "Saving…" : "Save online"}
+                {saving ? (
+                <>
+                  <span className="spinner" aria-hidden="true" /> Saving…
+                </>
+              ) : (
+                "Save online"
+              )}
               </button>
               <button
                 type="button"

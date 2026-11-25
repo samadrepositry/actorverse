@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import type { CSSProperties } from "react";
 import { useRouter } from "next/navigation";
 import { DEPARTMENTS, EXERCISES, exercisesFor } from "@/data/exercises";
 import type { Department } from "@/data/exercises";
+import { DEPT_ACCENTS } from "@/lib/theme";
 
 type Filter = Department | "All";
 
@@ -24,7 +26,7 @@ export default function ExercisesPage() {
   }
 
   return (
-    <section className="section">
+    <section className="section" data-page="exercises">
       <h2>Exercise Library</h2>
       <p className="sub">
         {EXERCISES.length} exercises across {DEPARTMENTS.length} departments.
@@ -39,6 +41,14 @@ export default function ExercisesPage() {
             className="fbtn"
             aria-pressed={filter === d}
             onClick={() => setFilter(d)}
+            style={
+              d !== "All"
+                ? ({
+                    "--dept": DEPT_ACCENTS[d as Department].color,
+                    "--dept-soft": DEPT_ACCENTS[d as Department].soft,
+                  } as CSSProperties)
+                : undefined
+            }
           >
             {d}
             {d !== "All" ? ` (${exercisesFor(d).length})` : ""}
@@ -51,7 +61,17 @@ export default function ExercisesPage() {
       <div className="grid">
         {list.map((ex) => (
           <article key={ex.id} className="card">
-            <span className="chip">{ex.department}</span>
+            <span
+              className="chip"
+              style={
+                {
+                  "--dept": DEPT_ACCENTS[ex.department].color,
+                  "--dept-soft": DEPT_ACCENTS[ex.department].soft,
+                } as CSSProperties
+              }
+            >
+              {ex.department}
+            </span>
             <h3>{ex.title}</h3>
             <p>{ex.description}</p>
             <div className="meta">

@@ -34,7 +34,10 @@ export default function ScriptsPage() {
   const [title, setTitle] = useState("");
   const [scriptText, setScriptText] = useState("");
   const [file, setFile] = useState<File | null>(null);
-  const [uploading, setUploading] = useState(false);
+  const [uploadStage, setUploadStage] = useState<
+    "idle" | "uploading" | "saving"
+  >("idle");
+  const [extractingId, setExtractingId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [messageOk, setMessageOk] = useState(false);
   const [rowBusy, setRowBusy] = useState<string | null>(null);
@@ -42,6 +45,14 @@ export default function ScriptsPage() {
   const [renameValue, setRenameValue] = useState("");
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const loadedOnce = useRef(false);
+  const mountedRef = useRef(true);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   const refreshList = useCallback(async () => {
     setScripts(await listMyScripts());
@@ -94,19 +105,37 @@ export default function ScriptsPage() {
       setMessageOk(false);
       return;
     }
-    setUploading(true);
+    // Stage 1: the file goes up. Stage 2: the row is saved. Both are
+    // quick; the PDF text is read in the background afterwards, so the
+    // button never sits on "Uploading…" for minutes on a big PDF.
+    setUploadStage("uploading");
     setMessage(null);
-    const result = await uploadScript(file, title, scriptText);
+    const result = await uploadScript(file, title, scriptText, (stage) =>
+      setUploadStage(stage),
+    );
+    setUploadStage("idle");
     setMessageOk(result.ok);
     setMessage(result.message);
-    setUploading(false);
-    if (result.ok) showToast("Script uploaded.");
-    if (result.ok) {
-      setFile(null);
-      setTitle("");
-      setScriptText("");
-      if (fileInputRef.current) fileInputRef.current.value = "";
+    if (!result.ok) return;
+    showToast("Script uploaded.");
+    const savedRow = result.row;
+    setFile(null);
+    setTitle("");
+    setScriptText("");
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    await refreshList();
+    if (result.extractionDone && savedRow) {
+      setExtractingId(savedRow.id);
+      const landed = await result.extractionDone;
+      if (!mountedRef.current) return;
+      setExtractingId(null);
       await refreshList();
+      setMessageOk(true);
+      setMessage(
+        landed
+          ? "Script saved. The text was read from the PDF automatically."
+          : "Script saved, but the text could not be read from this PDF. Tap it in the Teleprompter to try again.",
+      );
     }
   }
 
@@ -237,10 +266,14 @@ export default function ScriptsPage() {
               <button
                 type="button"
                 className="btn btn-gold"
-                disabled={uploading || !file}
+                disabled={uploadStage !== "idle" || !file}
                 onClick={() => void handleUpload()}
               >
-                {uploading ? "Uploading…" : "Upload script"}
+                {uploadStage === "uploading"
+                  ? "Uploading file…"
+                  : uploadStage === "saving"
+                    ? "Saving…"
+                    : "Upload script"}
               </button>
             </div>
           </div>
@@ -267,6 +300,14 @@ export default function ScriptsPage() {
                       <strong>{row.title}</strong>
                       <span className="muted">{formatDate(row.created_at)}</span>
                     </div>
+                    {extractingId === row.id && (
+                      <p
+                        className="sub"
+                        style={{ marginTop: 4, marginBottom: 0 }}
+                      >
+                        Reading text from the PDF…
+                      </p>
+                    )}
                     {renamingId === row.id ? (
                       <div className="form" style={{ marginTop: 10 }}>
                         <input

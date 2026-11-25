@@ -2,10 +2,17 @@
 // Scripts upload to the private `scripts` Storage bucket and one row is
 // written to the public.scripts table. Everything is own-rows-only: a user
 // can only see, open, rename and delete their own scripts. PDF only,
-// max about 10 MB. The words are read out of the PDF automatically at
-// upload (pdf.js, in the browser) and saved as the script text, so
-// tapping the PDF in the Teleprompter puts its words straight in the
-// reading box. A pasted text, if given, wins over the extracted one.
+// max about 10 MB. The words are read out of the PDF automatically
+// (pdf.js, in the browser) and saved as the script text, so tapping the
+// PDF in the Teleprompter puts its words straight in the reading box.
+// A pasted text, if given, wins over the extracted one.
+//
+// Speed: the file is uploaded and the row is saved FIRST, and the user
+// gets "Saved" right away. The PDF text is then read in the background
+// and saved onto the row when it finishes — a big novel PDF takes
+// minutes to read on a phone, and the upload must never wait for it.
+// If background extraction fails, the text stays empty and the
+// Teleprompter reads it again when the PDF is tapped.
 
 import { createClient, isSupabaseConfigured } from "./supabase";
 import { extractPdfText } from "./pdfText";
@@ -28,6 +35,13 @@ export interface ScriptResult {
   row?: ScriptRow;
   /** True when the text was read out of the PDF automatically. */
   textExtracted?: boolean;
+  /**
+   * Present when the PDF text is still being read in the background.
+   * Resolves to true when the text landed on the row, false when it
+   * could not be read (scanned PDF or extraction error). The caller
+   * can await it to refresh the list — it never blocks the save.
+   */
+  extractionDone?: Promise<boolean>;
 }
 
 function friendlyUploadError(message: string): string {
@@ -63,11 +77,20 @@ export function validateScriptFile(file: File): string | null {
   return null;
 }
 
-/** Upload a PDF script and write its row. */
+/**
+ * Upload a PDF script and write its row — fast. The file is uploaded,
+ * the row is saved, and the user gets success right away. When no text
+ * was pasted, the PDF text is then read in the background (pdf.js) and
+ * saved onto the row when it finishes; `result.extractionDone` resolves
+ * when that happens. `onStage` reports the two visible steps so the UI
+ * can show "Uploading file…" then "Saving…" instead of one stuck
+ * "Uploading…" spinner.
+ */
 export async function uploadScript(
   file: File,
   title: string,
   scriptText: string,
+  onStage?: (stage: "uploading" | "saving") => void,
 ): Promise<ScriptResult> {
   const problem = validateScriptFile(file);
   if (problem) return { ok: false, message: problem };
@@ -88,31 +111,20 @@ export async function uploadScript(
     }
     const cleanTitle = title.trim() || file.name.replace(/\.pdf$/i, "");
     const path = `${user.id}/${Date.now()}.pdf`;
+    onStage?.("uploading");
     const { error: uploadError } = await supabase.storage
       .from(SCRIPTS_BUCKET)
       .upload(path, file, { contentType: "application/pdf", upsert: false });
     if (uploadError) {
       return { ok: false, message: friendlyUploadError(uploadError.message) };
     }
-    // No pasted text? Read the words out of the PDF itself, so tapping
-    // it in the Teleprompter later is instant. Extraction never blocks
-    // the upload: if it fails, the file is saved with no text and the
-    // Teleprompter can try reading it again when it is tapped.
-    let textToSave: string | null = scriptText.trim()
+    // Save the row right away — pasted text if given, otherwise no text
+    // yet. The PDF text is read in the background below; the user never
+    // waits for it (a big novel takes minutes to read on a phone).
+    const textToSave: string | null = scriptText.trim()
       ? scriptText.trim()
       : null;
-    let textExtracted = false;
-    if (!textToSave) {
-      try {
-        const extracted = await extractPdfText(await file.arrayBuffer());
-        if (extracted) {
-          textToSave = extracted;
-          textExtracted = true;
-        }
-      } catch {
-        // Saved with no text — see the note above.
-      }
-    }
+    onStage?.("saving");
     const { data, error: insertError } = await supabase
       .from("scripts")
       .insert({
@@ -140,13 +152,36 @@ export async function uploadScript(
         message: `The PDF uploaded, but its entry could not be saved: ${insertError.message}.`,
       };
     }
+    const row = data as ScriptRow;
+    // No pasted text? Read the words out of the PDF in the background.
+    // Fire-and-forget: the caller gets success now and can await
+    // `extractionDone` to refresh the list when the text lands. If it
+    // fails, the text stays empty and the Teleprompter reads the PDF
+    // again when it is tapped.
+    if (!textToSave) {
+      const extractionDone: Promise<boolean> = (async () => {
+        try {
+          const extracted = await extractPdfText(await file.arrayBuffer());
+          if (!extracted) return false;
+          return await saveScriptText(row.id, extracted);
+        } catch {
+          return false;
+        }
+      })();
+      return {
+        ok: true,
+        message:
+          "Saved. Reading the text from the PDF in the background…",
+        row,
+        textExtracted: false,
+        extractionDone,
+      };
+    }
     return {
       ok: true,
-      message: textExtracted
-        ? "Script saved. The text was read from the PDF automatically."
-        : "Script saved.",
-      row: data as ScriptRow,
-      textExtracted,
+      message: "Script saved.",
+      row,
+      textExtracted: false,
     };
   } catch (err) {
     return {

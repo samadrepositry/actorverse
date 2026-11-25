@@ -41,16 +41,19 @@ export async function POST(req: Request) {
       { status: 400 },
     );
   }
-  const target = body.target === "ur" ? "ur" : "en";
+  const target =
+    body.target === "ur" ? "ur" : body.target === "es" ? "es" : "en";
 
   // Translate faithfully and simply. For Urdu, always use Urdu script
-  // (اردو) — never Roman Urdu. Reply with ONLY the translation, no
-  // explanation and no extra text. If the text is already in the target
-  // language, return it unchanged.
+  // (اردو) — never Roman Urdu. For Spanish, always reply in Spanish.
+  // Reply with ONLY the translation, no explanation and no extra text.
+  // If the text is already in the target language, return it unchanged.
   const systemPrompt =
     target === "ur"
       ? "You are a translator. Translate the user's text into Urdu, using Urdu script (اردو) for every word. Never use Roman Urdu. Keep the meaning exactly, keep it simple and natural. Reply with ONLY the translation — no explanation, no extra text, no quotation marks around it. If the text is already in Urdu script, return it unchanged."
-      : "You are a translator. Translate the user's text into simple, easy English. Keep the meaning exactly, keep it simple and natural. Reply with ONLY the translation — no explanation, no extra text, no quotation marks around it. If the text is already in English, return it unchanged.";
+      : target === "es"
+        ? "You are a translator. Translate the user's text into Spanish. Keep the meaning exactly, keep it simple and natural. Reply with ONLY the translation — no explanation, no extra text, no quotation marks around it. If the text is already in Spanish, return it unchanged."
+        : "You are a translator. Translate the user's text into simple, easy English. Keep the meaning exactly, keep it simple and natural. Reply with ONLY the translation — no explanation, no extra text, no quotation marks around it. If the text is already in English, return it unchanged.";
 
   // Same fallback as the Coach route: an overloaded model (503), a rate
   // limit (429), a model this key cannot use (404), a timeout, or an empty

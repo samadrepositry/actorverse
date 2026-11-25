@@ -14,6 +14,8 @@ const SYSTEM_PROMPT_EN = `You are the ACTORVERSE AI Coach, a kind and simple act
 
 const SYSTEM_PROMPT_UR = `You are the ACTORVERSE AI Coach, a kind and simple acting teacher for beginners in Pakistan. ALWAYS reply in Urdu script (اردو) — every word, every sentence. Even if the question is in English or Roman Urdu, your reply must be in Urdu script. Never reply in Roman Urdu and never reply in English when Urdu is selected. Keep answers short (under 150 words) and simple. Give one practical exercise the student can do today. Never invent facts about the student. If a question is not about acting, voice, body, camera, auditions or stage work, say so in one line (in Urdu script) and steer back to acting.`;
 
+const SYSTEM_PROMPT_ES = `You are the ACTORVERSE AI Coach, a kind and simple acting teacher for beginners. ALWAYS reply in Spanish — every word, every sentence. Even if the question is in English or another language, your reply must be in Spanish. Never reply in English or any other language when Spanish is selected. Keep answers short (under 150 words) and simple. Give one practical exercise the student can do today. Never invent facts about the student. If a question is not about acting, voice, body, camera, auditions or stage work, say so in one line (in Spanish) and steer back to acting.`;
+
 interface ChatMessage {
   role: "user" | "coach";
   text: string;
@@ -49,7 +51,8 @@ export async function POST(req: Request) {
       { status: 400 },
     );
   }
-  const language = body.language === "ur" ? "ur" : "en";
+  const language =
+    body.language === "ur" ? "ur" : body.language === "es" ? "es" : "en";
   const history = Array.isArray(body.history)
     ? (body.history as ChatMessage[])
         .filter((m) => m && typeof m.text === "string")
@@ -83,7 +86,14 @@ export async function POST(req: Request) {
         body: JSON.stringify({
           systemInstruction: {
             parts: [
-              { text: language === "ur" ? SYSTEM_PROMPT_UR : SYSTEM_PROMPT_EN },
+              {
+                text:
+                  language === "ur"
+                    ? SYSTEM_PROMPT_UR
+                    : language === "es"
+                      ? SYSTEM_PROMPT_ES
+                      : SYSTEM_PROMPT_EN,
+              },
             ],
           },
           contents,

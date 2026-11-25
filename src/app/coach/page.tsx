@@ -29,23 +29,49 @@ function renderRich(text: string) {
   ));
 }
 
-const STARTERS: { en: string; ur: string }[] = [
+type CoachLanguage = "en" | "ur" | "es";
+
+const UI_STRINGS: Record<
+  CoachLanguage,
+  { empty: string; label: string; placeholder: string }
+> = {
+  en: {
+    empty: "Pick a question below, or write your own.",
+    label: "Write your question",
+    placeholder: "e.g. My voice feels weak — what should I do?",
+  },
+  ur: {
+    empty: "Neeche se ek sawal chunein, ya apna sawal likhein.",
+    label: "Apna sawal likhein",
+    placeholder: "Jaise: meri awaz kamzor hai, kya karoon?",
+  },
+  es: {
+    empty: "Elige una pregunta abajo, o escribe la tuya.",
+    label: "Escribe tu pregunta",
+    placeholder: "Ej.: Mi voz se siente débil, ¿qué debo hacer?",
+  },
+};
+
+const STARTERS: { en: string; ur: string; es: string }[] = [
   {
     en: "How do I stop feeling nervous before an audition?",
     ur: "Audition se pehle ghabrahat kaise khatam karoon?",
+    es: "¿Cómo dejo de sentirme nervioso antes de una audición?",
   },
   {
     en: "Give me one voice warm-up I can do every morning.",
     ur: "Mujhe subah ke liye ek voice warm-up batao.",
+    es: "Dame un calentamiento de voz que pueda hacer cada mañana.",
   },
   {
     en: "How can I make my monologue feel more real?",
     ur: "Apna monologue zyada real kaise banao?",
+    es: "¿Cómo puedo hacer que mi monólogo se sienta más real?",
   },
 ];
 
 export default function CoachPage() {
-  const [language, setLanguage] = useState<"en" | "ur">("en");
+  const [language, setLanguage] = useState<CoachLanguage>("en");
   const [messages, setMessages] = useState<ChatMsg[]>([]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
@@ -60,7 +86,7 @@ export default function CoachPage() {
   // questions. The user's own messages are left exactly as written and
   // are never translated. If a translation fails, that answer stays in its
   // original language and a small note says so.
-  async function switchLanguage(target: "en" | "ur") {
+  async function switchLanguage(target: CoachLanguage) {
     if (target === language || translating || busy) return;
     setLanguage(target);
     setTranslateNote(null);
@@ -177,6 +203,15 @@ export default function CoachPage() {
         >
           اردو
         </button>
+        <button
+          type="button"
+          className="fbtn"
+          aria-pressed={language === "es"}
+          disabled={translating || busy}
+          onClick={() => void switchLanguage("es")}
+        >
+          Español
+        </button>
       </div>
 
       {translating && (
@@ -193,11 +228,7 @@ export default function CoachPage() {
       <div className="card">
         <div className="chat-log" ref={listRef}>
           {messages.length === 0 && (
-            <p className="sub">
-              {language === "ur"
-                ? "Neeche se ek sawal chunein, ya apna sawal likhein."
-                : "Pick a question below, or write your own."}
-            </p>
+            <p className="sub">{UI_STRINGS[language].empty}</p>
           )}
           {messages.map((m, i) => (
             <div
@@ -218,18 +249,14 @@ export default function CoachPage() {
         </div>
         <div className="form" style={{ marginTop: 12 }}>
           <label htmlFor="coach-input">
-            {language === "ur" ? "Apna sawal likhein" : "Write your question"}
+            {UI_STRINGS[language].label}
           </label>
           <textarea
             id="coach-input"
             rows={3}
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder={
-              language === "ur"
-                ? "Jaise: meri awaz kamzor hai, kya karoon?"
-                : "e.g. My voice feels weak — what should I do?"
-            }
+            placeholder={UI_STRINGS[language].placeholder}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
@@ -262,9 +289,9 @@ export default function CoachPage() {
               type="button"
               className="btn btn-line"
               disabled={busy}
-              onClick={() => void send(language === "ur" ? s.ur : s.en)}
+              onClick={() => void send(s[language])}
             >
-              {language === "ur" ? s.ur : s.en}
+              {s[language]}
             </button>
           ))}
         </div>

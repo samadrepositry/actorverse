@@ -5,8 +5,10 @@
 
 import { NextResponse } from "next/server";
 
-const GEMINI_MODEL = "gemini-flash-latest";
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
+const GEMINI_MODELS = ["gemini-flash-latest", "gemini-2.5-flash", "gemini-2.0-flash"];
+const GEMINI_TIMEOUT_MS = 20000;
+const GEMINI_API_BASE =
+  "https://generativelanguage.googleapis.com/v1beta/models";
 
 const SYSTEM_PROMPT_EN = `You are the ACTORVERSE AI Coach, a kind and simple acting teacher for beginners in Pakistan. Reply in simple, easy English. Keep answers short (under 150 words). Give one practical exercise the student can do today. Never invent facts about the student. If a question is not about acting, voice, body, camera, auditions or stage work, say so in one line and steer back to acting.`;
 
@@ -62,49 +64,66 @@ export async function POST(req: Request) {
     { role: "user", parts: [{ text: message }] },
   ];
 
-  try {
-    const res = await fetch(GEMINI_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-goog-api-key": apiKey,
-      },
-      body: JSON.stringify({
-        systemInstruction: {
-          parts: [
-            { text: language === "ur" ? SYSTEM_PROMPT_UR : SYSTEM_PROMPT_EN },
-          ],
+  // Try each model in order. An overloaded model (503), a rate limit (429),
+  // a model this key cannot use (404), a timeout, or an empty reply moves
+  // to the next model. The first real reply wins. If every model fails, the
+  // honest error from the last attempt is returned — never a fake answer.
+  // A key/permission problem (400/401/403) would fail the same way on every
+  // model, so it is returned straight away.
+  let lastError = "Gemini did not answer.";
+  for (const model of GEMINI_MODELS) {
+    const url = `${GEMINI_API_BASE}/${model}:generateContent`;
+    try {
+      const res = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-goog-api-key": apiKey,
         },
-        contents,
-      }),
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      const detail =
-        data?.error?.message || `Gemini returned status ${res.status}.`;
-      return NextResponse.json(
-        { error: `The AI Coach could not answer right now: ${detail}` },
-        { status: 502 },
-      );
+        body: JSON.stringify({
+          systemInstruction: {
+            parts: [
+              { text: language === "ur" ? SYSTEM_PROMPT_UR : SYSTEM_PROMPT_EN },
+            ],
+          },
+          contents,
+        }),
+        signal: AbortSignal.timeout(GEMINI_TIMEOUT_MS),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        lastError =
+          data?.error?.message || `Gemini returned status ${res.status}.`;
+        if (res.status === 503 || res.status === 429 || res.status === 404) {
+          continue;
+        }
+        return NextResponse.json(
+          { error: `The AI Coach could not answer right now: ${lastError}` },
+          { status: 502 },
+        );
+      }
+      const reply: string | undefined =
+        data?.candidates?.[0]?.content?.parts
+          ?.map((p: { text?: string }) => p.text ?? "")
+          .join("")
+          .trim();
+      if (!reply) {
+        lastError = "The AI Coach gave an empty answer.";
+        continue;
+      }
+      return NextResponse.json({ reply });
+    } catch (err) {
+      // Timeout (AbortSignal.timeout) or a network failure: fail fast and
+      // try the next model.
+      lastError =
+        err instanceof Error
+          ? err.message
+          : "The AI Coach could not be reached.";
+      continue;
     }
-    const reply: string | undefined =
-      data?.candidates?.[0]?.content?.parts
-        ?.map((p: { text?: string }) => p.text ?? "")
-        .join("")
-        .trim();
-    if (!reply) {
-      return NextResponse.json(
-        { error: "The AI Coach gave an empty answer. Try again." },
-        { status: 502 },
-      );
-    }
-    return NextResponse.json({ reply });
-  } catch (err) {
-    return NextResponse.json(
-      {
-        error: `The AI Coach could not be reached: ${err instanceof Error ? err.message : "unknown error"}. Try again.`,
-      },
-      { status: 502 },
-    );
   }
+  return NextResponse.json(
+    { error: `The AI Coach could not answer right now: ${lastError}` },
+    { status: 502 },
+  );
 }

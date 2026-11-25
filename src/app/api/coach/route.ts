@@ -5,7 +5,7 @@
 
 import { NextResponse } from "next/server";
 
-const GEMINI_MODELS = ["gemini-flash-latest", "gemini-2.5-flash", "gemini-2.0-flash"];
+const GEMINI_MODELS = ["gemini-flash-latest", "gemini-flash-lite-latest", "gemini-2.5-flash", "gemini-2.0-flash"];
 const GEMINI_TIMEOUT_MS = 20000;
 const GEMINI_API_BASE =
   "https://generativelanguage.googleapis.com/v1beta/models";

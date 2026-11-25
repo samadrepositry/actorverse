@@ -459,6 +459,41 @@ h2 {
   color: #241a02;
 }
 
+/* Teleprompter script-source tabs */
+.source-tabs {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 16px;
+}
+@media (max-width: 560px) {
+  .source-tabs {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+.source-tab {
+  min-height: 52px;
+  border: 1.5px solid var(--line);
+  background: var(--surface);
+  color: var(--ink-2);
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  padding: 10px 8px;
+  cursor: pointer;
+}
+.source-tab[aria-pressed="true"] {
+  background: var(--gold-gradient);
+  border-color: var(--gold);
+  color: #241a02;
+}
+.scan-preview {
+  max-width: 100%;
+  border-radius: 10px;
+  border: 1.5px solid var(--line);
+  margin-top: 12px;
+}
+
 /* Forms */
 .form {
   display: grid;

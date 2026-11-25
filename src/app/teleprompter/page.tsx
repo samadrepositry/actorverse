@@ -14,7 +14,7 @@ import { downloadBlob } from "@/lib/recorder";
 import type { ShotSize } from "@/lib/recorder";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase";
 import { uploadTake } from "@/lib/recordings";
-import { getMyScript } from "@/lib/scripts";
+import { getMyScript, listMyScripts, type ScriptRow } from "@/lib/scripts";
 import { showToast } from "@/components/Toast";
 
 const SHOTS: { id: ShotSize; label: string; hint: string }[] = [
@@ -66,6 +66,17 @@ function TeleprompterPageInner() {
   const [saveOk, setSaveOk] = useState(false);
   const [signedIn, setSignedIn] = useState<boolean | null>(null);
   const [takeUrl, setTakeUrl] = useState<string | null>(null);
+  const [source, setSource] = useState<
+    "paste" | "pdfs" | "scan" | "monologues"
+  >("paste");
+  const [pdfs, setPdfs] = useState<ScriptRow[] | null>(null);
+  const [pdfsLoading, setPdfsLoading] = useState(false);
+  const [selectedPdfId, setSelectedPdfId] = useState<string | null>(null);
+  const [pdfNote, setPdfNote] = useState<string | null>(null);
+  const [scanImage, setScanImage] = useState<string | null>(null);
+  const [scanStatus, setScanStatus] = useState<string | null>(null);
+  const [scanBusy, setScanBusy] = useState(false);
+  const [scanNotice, setScanNotice] = useState(false);
 
   const scriptRef = useRef<HTMLDivElement | null>(null);
   const speedRef = useRef(speed);
@@ -104,11 +115,17 @@ function TeleprompterPageInner() {
     const monoId = searchParams.get("monologue");
     if (monoId) {
       const m = MONOLOGUES.find((x) => x.id === monoId);
-      if (m) pickMonologue(m.id, m.title);
+      if (m) {
+        setSource("monologues");
+        pickMonologue(m.id, m.title);
+      }
       return;
     }
     const scriptId = searchParams.get("script");
     if (scriptId) {
+      setSource("pdfs");
+      setSelectedPdfId(scriptId);
+      void loadPdfs();
       let cancelled = false;
       (async () => {
         const row = await getMyScript(scriptId);
@@ -154,13 +171,92 @@ function TeleprompterPageInner() {
   // Reset the script scroll when the script changes.
   useEffect(() => {
     if (scriptRef.current) scriptRef.current.scrollTop = 0;
-  }, [monologueId, useOwn]);
+  }, [monologueId, useOwn, source]);
 
   function pickMonologue(id: string, mTitle: string) {
     setMonologueId(id);
     setUseOwn(false);
     setTitle(mTitle);
     setSaveMessage(null);
+  }
+
+  /** Load the signed-in user's saved PDF scripts (Script Vault). */
+  async function loadPdfs() {
+    if (pdfs !== null || pdfsLoading) return;
+    setPdfsLoading(true);
+    const rows = await listMyScripts();
+    setPdfs(rows);
+    setPdfsLoading(false);
+  }
+
+  /** Tap a saved PDF: load its saved text into the Teleprompter. */
+  function pickPdf(row: ScriptRow) {
+    setSelectedPdfId(row.id);
+    if (row.script_text?.trim()) {
+      setOwnText(row.script_text);
+      setUseOwn(true);
+      setTitle(row.title);
+      setPdfNote(null);
+      setSaveMessage(null);
+    } else {
+      setPdfNote(
+        "This PDF has no typed text saved. Open it in Scripts and add the text, or paste the text in the Paste script tab.",
+      );
+    }
+  }
+
+  /** Scan a photographed or uploaded page into the editable text box. */
+  async function handleScanFile(file: File | undefined) {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setScanStatus("That file is not a picture. Choose an image file.");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const dataUrl = String(reader.result);
+      setScanImage(dataUrl);
+      setScanNotice(false);
+      setScanBusy(true);
+      setScanStatus("Reading the page…");
+      try {
+        const Tesseract = (await import("tesseract.js")).default;
+        const result = await Tesseract.recognize(dataUrl, "eng+urd", {
+          logger: (m) => {
+            if (
+              m.status === "recognizing text" &&
+              typeof m.progress === "number"
+            ) {
+              setScanStatus(
+                `Reading the page… ${Math.round(m.progress * 100)}%`,
+              );
+            }
+          },
+        });
+        const text = (result?.data?.text ?? "").trim();
+        if (!text) throw new Error("No text found on the page.");
+        setOwnText(text);
+        setUseOwn(true);
+        setTitle("Scanned page");
+        setScanNotice(true);
+        setScanStatus("Page read. Check the words below, then press RECORD.");
+        setTakeError(null);
+      } catch {
+        // Never fake a transcription: pin the photo as a picture prompt
+        // and ask for the text to be typed or pasted instead.
+        setPicture(dataUrl);
+        setScanNotice(false);
+        setScanStatus(
+          "Scanning did not work on this photo. The photo is pinned as a picture prompt above the camera — please type or paste the text in the Paste script tab instead.",
+        );
+      } finally {
+        setScanBusy(false);
+      }
+    };
+    reader.onerror = () => {
+      setScanStatus("That picture could not be read. Try another image.");
+    };
+    reader.readAsDataURL(file);
   }
 
   function handlePictureFile(file: File | undefined) {
@@ -188,7 +284,7 @@ function TeleprompterPageInner() {
       return;
     }
     if (!script.trim()) {
-      setTakeError("Pick a monologue or paste your own text first.");
+      setTakeError("Pick a script, paste your text, or scan a page first.");
       return;
     }
     if (!cameraOn) {
@@ -233,46 +329,201 @@ function TeleprompterPageInner() {
 
       <div className="card" style={{ marginBottom: 14 }}>
         <h3 style={{ marginTop: 0 }}>1. Pick a script</h3>
-        <div className="filters" role="group" aria-label="Monologues">
-          {MONOLOGUES.map((m) => (
-            <button
-              key={m.id}
-              type="button"
-              className="fbtn"
-              aria-pressed={!useOwn && monologueId === m.id}
-              onClick={() => pickMonologue(m.id, m.title)}
-            >
-              {m.title}
-            </button>
-          ))}
+        <div className="source-tabs" role="group" aria-label="Script source">
           <button
             type="button"
-            className="fbtn"
-            aria-pressed={useOwn}
+            className="source-tab"
+            aria-pressed={source === "paste"}
             onClick={() => {
+              setSource("paste");
               setUseOwn(true);
               setTitle("My take");
               setSaveMessage(null);
             }}
           >
-            My own text
+            Paste script
+          </button>
+          <button
+            type="button"
+            className="source-tab"
+            aria-pressed={source === "pdfs"}
+            onClick={() => {
+              setSource("pdfs");
+              void loadPdfs();
+            }}
+          >
+            My PDFs
+          </button>
+          <button
+            type="button"
+            className="source-tab"
+            aria-pressed={source === "scan"}
+            onClick={() => setSource("scan")}
+          >
+            Scan a page
+          </button>
+          <button
+            type="button"
+            className="source-tab"
+            aria-pressed={source === "monologues"}
+            onClick={() => setSource("monologues")}
+          >
+            Monologues
           </button>
         </div>
-        {useOwn ? (
+
+        {source === "paste" && (
           <div className="form">
             <label htmlFor="own-script">Paste your own script</label>
             <textarea
               id="own-script"
-              rows={5}
+              dir="auto"
+              rows={8}
               value={ownText}
               onChange={(e) => setOwnText(e.target.value)}
-              placeholder="Paste or type your script here…"
+              placeholder="Paste or type your script here — Urdu or English"
             />
+            <p className="sub" style={{ marginBottom: 0 }}>
+              {ownText.trim()
+                ? `${ownText.trim().split(/\s+/).length} words — this is the text that will scroll when you press RECORD.`
+                : "Type or paste in Urdu or English. Urdu types right-to-left automatically."}
+            </p>
           </div>
-        ) : (
-          <p className="sub" style={{ marginBottom: 0 }}>
-            {MONOLOGUES.find((m) => m.id === monologueId)?.character}
-          </p>
+        )}
+
+        {source === "pdfs" && (
+          <div>
+            {signedIn === false ? (
+              <p className="sub" style={{ marginBottom: 0 }}>
+                Sign in to see your PDFs.
+              </p>
+            ) : pdfsLoading ? (
+              <p className="sub" style={{ marginBottom: 0 }}>
+                Loading your PDFs…
+              </p>
+            ) : pdfs && pdfs.length === 0 ? (
+              <p className="sub" style={{ marginBottom: 0 }}>
+                No PDFs yet — upload one in{" "}
+                <a href="/scripts">Scripts</a>.
+              </p>
+            ) : (
+              <div
+                className="filters"
+                role="group"
+                aria-label="My PDF scripts"
+                style={{ marginBottom: 0 }}
+              >
+                {(pdfs ?? []).map((p) => (
+                  <button
+                    key={p.id}
+                    type="button"
+                    className="fbtn"
+                    aria-pressed={selectedPdfId === p.id}
+                    onClick={() => pickPdf(p)}
+                  >
+                    {p.title}
+                  </button>
+                ))}
+              </div>
+            )}
+            {pdfNote && (
+              <p className="note" role="status" style={{ marginTop: 12 }}>
+                {pdfNote}
+              </p>
+            )}
+          </div>
+        )}
+
+        {source === "scan" && (
+          <div>
+            <div className="rowbtns" style={{ marginTop: 0 }}>
+              <label className="btn btn-gold" htmlFor="scan-camera">
+                Take a photo
+              </label>
+              <input
+                id="scan-camera"
+                type="file"
+                accept="image/*"
+                capture="environment"
+                style={{ display: "none" }}
+                onChange={(e) => void handleScanFile(e.target.files?.[0])}
+              />
+              <label className="btn btn-line" htmlFor="scan-upload">
+                Upload an image
+              </label>
+              <input
+                id="scan-upload"
+                type="file"
+                accept="image/*"
+                style={{ display: "none" }}
+                onChange={(e) => void handleScanFile(e.target.files?.[0])}
+              />
+            </div>
+            {scanImage && (
+              <img
+                src={scanImage}
+                alt="Scanned page"
+                className="scan-preview"
+              />
+            )}
+            {scanStatus && (
+              <p
+                className="sub"
+                role="status"
+                style={{ marginTop: 12, marginBottom: 0 }}
+              >
+                {scanStatus}
+              </p>
+            )}
+            {scanNotice && (
+              <div className="form" style={{ marginTop: 12 }}>
+                <p className="note" style={{ marginTop: 0 }}>
+                  <strong>
+                    Check the words — fix any wrong words before recording.
+                  </strong>{" "}
+                  The scan can misread handwriting, so read the text below and
+                  correct it.
+                </p>
+                <label htmlFor="scanned-script">
+                  Scanned text (you can edit it)
+                </label>
+                <textarea
+                  id="scanned-script"
+                  dir="auto"
+                  rows={6}
+                  value={ownText}
+                  onChange={(e) => setOwnText(e.target.value)}
+                  placeholder="Scanned text will appear here…"
+                />
+              </div>
+            )}
+          </div>
+        )}
+
+        {source === "monologues" && (
+          <div>
+            <div
+              className="filters"
+              role="group"
+              aria-label="Monologues"
+              style={{ marginBottom: 0 }}
+            >
+              {MONOLOGUES.map((m) => (
+                <button
+                  key={m.id}
+                  type="button"
+                  className="fbtn"
+                  aria-pressed={!useOwn && monologueId === m.id}
+                  onClick={() => pickMonologue(m.id, m.title)}
+                >
+                  {m.title}
+                </button>
+              ))}
+            </div>
+            <p className="sub" style={{ marginBottom: 0, marginTop: 12 }}>
+              {MONOLOGUES.find((m) => m.id === monologueId)?.character}
+            </p>
+          </div>
         )}
       </div>
 
@@ -438,7 +689,9 @@ function TeleprompterPageInner() {
           className="tele-script"
           style={{ fontSize: `${fontSize}px` }}
         >
-          {script.trim() ? script : "Pick a monologue or paste your own text."}
+          {script.trim()
+            ? script
+            : "Pick a script, paste your text, or scan a page."}
         </div>
       </div>
 

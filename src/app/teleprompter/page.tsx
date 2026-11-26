@@ -341,44 +341,68 @@ function TeleprompterPageInner() {
         } catch {
           ocrUrl = dataUrl;
         }
-        // Urdu ONLY: the English model hallucinates Latin words out of
-        // Nastaliq strokes. PSM 6: one dense block of text — a novel
-        // page. The worker is terminated after every scan so repeated
-        // scans never pile up workers.
-        const worker = await Tesseract.createWorker("urd", undefined, {
-          logger: (m) => {
-            if (
-              m.status === "recognizing text" &&
-              typeof m.progress === "number"
-            ) {
-              setScanStatus(
-                `Reading the page… ${Math.round(m.progress * 100)}%`,
-              );
-            }
-          },
-        });
-        try {
-          await worker.setParameters({
-            tessedit_pageseg_mode: Tesseract.PSM.SINGLE_BLOCK,
+        // Two separate passes — never one mixed "eng+urd" pass (that is
+        // what mixed Latin junk into the Urdu). Each pass reads the
+        // cleaned photo in one language with PSM 6 (one dense block of
+        // text — a novel page). The pass with the stronger read wins and
+        // ONLY its text is shown; the other pass's output is discarded.
+        // Score = total word confidence (mean confidence × word count):
+        // a real read has many confident words, a wrong-language pass
+        // has few, low-confidence guesses. A page that mixes Urdu AND
+        // English in the same text will only get its dominant language
+        // read well — pure Urdu and pure English pages both work.
+        async function ocrPass(
+          lang: "urd" | "eng",
+          progressBase: number,
+        ): Promise<{ text: string; score: number }> {
+          const worker = await Tesseract.createWorker(lang, undefined, {
+            logger: (m) => {
+              if (
+                m.status === "recognizing text" &&
+                typeof m.progress === "number"
+              ) {
+                setScanStatus(
+                  `Reading the page… ${Math.round(
+                    progressBase + m.progress * 50,
+                  )}%`,
+                );
+              }
+            },
           });
-          const result = await worker.recognize(ocrUrl);
-          const text = (result?.data?.text ?? "").trim();
-          if (!text) throw new Error("No text found on the page.");
-          setOwnText(text);
-          setUseOwn(true);
-          setTitle("Scanned page");
-          setScanNotice(true);
-          setScanStatus(
-            "Page read. Check the words below, then press RECORD.",
-          );
-          setTakeError(null);
-        } finally {
           try {
-            await worker.terminate();
-          } catch {
-            // Worker cleanup failure is not a scan failure.
+            await worker.setParameters({
+              tessedit_pageseg_mode: Tesseract.PSM.SINGLE_BLOCK,
+            });
+            const result = await worker.recognize(ocrUrl);
+            const text = (result?.data?.text ?? "").trim();
+            const words = result?.data?.words ?? [];
+            let score = 0;
+            for (const w of words) {
+              score += typeof w.confidence === "number" ? w.confidence : 0;
+            }
+            return { text, score };
+          } finally {
+            try {
+              await worker.terminate();
+            } catch {
+              // Worker cleanup failure is not a scan failure.
+            }
           }
         }
+        const urduPass = await ocrPass("urd", 0);
+        const englishPass = await ocrPass("eng", 50);
+        const best =
+          englishPass.score > urduPass.score ? englishPass : urduPass;
+        const text = best.text;
+        if (!text) throw new Error("No text found on the page.");
+        setOwnText(text);
+        setUseOwn(true);
+        setTitle("Scanned page");
+        setScanNotice(true);
+        setScanStatus(
+          "Page read. Check the words below, then press RECORD.",
+        );
+        setTakeError(null);
       } catch {
         // Never fake a transcription: pin the photo as a picture prompt
         // and ask for the text to be typed or pasted instead.

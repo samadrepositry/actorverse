@@ -5,7 +5,13 @@
 
 import { NextResponse } from "next/server";
 
-const GEMINI_MODELS = ["gemini-flash-latest", "gemini-flash-lite-latest", "gemini-2.5-flash", "gemini-2.0-flash"];
+// Verified 2026-11-26 with direct probes against the Gemini API:
+// gemini-flash-latest and gemini-flash-lite-latest both answer (200).
+// gemini-2.5-flash and gemini-2.0-flash are RETIRED (404 "no longer
+// available") — removed. gemini-3.8-flash exists but was overloaded
+// (503 "high demand" on two probes) and never returned a real answer
+// within the 20s timeout, so it is left out for now.
+const GEMINI_MODELS = ["gemini-flash-latest", "gemini-flash-lite-latest"];
 const GEMINI_TIMEOUT_MS = 20000;
 const GEMINI_API_BASE =
   "https://generativelanguage.googleapis.com/v1beta/models";
@@ -69,10 +75,11 @@ export async function POST(req: Request) {
 
   // Try each model in order. An overloaded model (503), a rate limit (429),
   // a model this key cannot use (404), a timeout, or an empty reply moves
-  // to the next model. The first real reply wins. If every model fails, the
-  // honest error from the last attempt is returned — never a fake answer.
-  // A key/permission problem (400/401/403) would fail the same way on every
-  // model, so it is returned straight away.
+  // to the next model. The first real reply wins. If every model fails, a
+  // short friendly message is returned — never a raw Gemini error and
+  // never a fake answer. A key/permission problem (400/401/403) would
+  // fail the same way on every model, so it is returned straight away
+  // (also as a plain message, with no API error text).
   let lastError = "Gemini did not answer.";
   for (const model of GEMINI_MODELS) {
     const url = `${GEMINI_API_BASE}/${model}:generateContent`;
@@ -108,7 +115,7 @@ export async function POST(req: Request) {
           continue;
         }
         return NextResponse.json(
-          { error: `The AI Coach could not answer right now: ${lastError}` },
+          { error: "The AI Coach could not answer right now. Please try again later." },
           { status: 502 },
         );
       }
@@ -132,8 +139,11 @@ export async function POST(req: Request) {
       continue;
     }
   }
+  // Every model failed. Log the raw error server-side for the owner,
+  // but the user only ever sees a short friendly message.
+  console.error("[coach] all models failed:", lastError);
   return NextResponse.json(
-    { error: `The AI Coach could not answer right now: ${lastError}` },
+    { error: "The Coach is busy right now — please try again in a moment." },
     { status: 502 },
   );
 }

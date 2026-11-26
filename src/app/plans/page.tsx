@@ -36,7 +36,10 @@ function describeCustom(row: EnrollmentRow): string {
       minutesPerDay?: number;
       weeks?: number;
     };
-    return `${d.department ?? ""} · ${d.minutesPerDay ?? "?"} min/day · ${d.weeks ?? "?"} weeks`;
+    // Non-breaking spaces keep each part ("20 min/day", "4 weeks")
+    // whole — the line may only break at the "·" separators.
+    const dept = (d.department ?? "").replace(/ /g, " ");
+    return `${dept} · ${d.minutesPerDay ?? "?"} min/day · ${d.weeks ?? "?"} weeks`;
   } catch {
     return "";
   }

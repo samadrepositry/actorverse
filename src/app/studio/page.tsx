@@ -606,10 +606,10 @@ export default function StudioPage() {
       </div>
 
       <p className="note">
-        <strong>About saving:</strong> your take saves itself to Studio
-        when you stop recording. Save to phone downloads it to your
-        gallery — true automatic saving to the gallery only exists in a
-        native app.
+        <strong>About saving:</strong> your take saves to Studio
+        automatically when you stop recording. Save to phone downloads the
+        video to your gallery — automatic saving straight to the gallery
+        only exists in the native app.
       </p>
     </section>
   );

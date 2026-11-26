@@ -7,9 +7,12 @@
 
 import { NextResponse } from "next/server";
 
-// Same verified model list as the AI Coach route. Do NOT use
-// gemini-3.8-flash (unverified, timed out) or retired gemini-2.0-flash.
-const GEMINI_MODELS = ["gemini-flash-latest", "gemini-flash-lite-latest", "gemini-2.5-flash", "gemini-2.0-flash"];
+// Same verified model list as the AI Coach route. gemini-2.5-flash and
+// gemini-2.0-flash are RETIRED (404 "no longer available", verified
+// 2026-11-26) — removed. gemini-3.8-flash exists but was overloaded
+// (503 "high demand" on two probes) and never returned a real answer
+// within the 20s timeout, so it is left out for now.
+const GEMINI_MODELS = ["gemini-flash-latest", "gemini-flash-lite-latest"];
 const GEMINI_TIMEOUT_MS = 20000;
 const GEMINI_API_BASE =
   "https://generativelanguage.googleapis.com/v1beta/models";
@@ -106,7 +109,7 @@ export async function POST(req: Request) {
           continue;
         }
         return NextResponse.json(
-          { ok: false, error: `AI scan could not read the page right now: ${lastError}` },
+          { ok: false, error: "AI scan could not read the page right now. Please try again later." },
           { status: 502 },
         );
       }
@@ -126,8 +129,11 @@ export async function POST(req: Request) {
       continue;
     }
   }
+  // Every model failed. Log the raw error server-side for the owner,
+  // but the user only ever sees a short friendly message.
+  console.error("[scan] all models failed:", lastError);
   return NextResponse.json(
-    { ok: false, error: `AI scan could not read the page right now: ${lastError}` },
+    { ok: false, error: "AI scan could not read the page right now. Please try again in a moment." },
     { status: 502 },
   );
 }

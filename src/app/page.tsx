@@ -1,6 +1,5 @@
 import Link from "next/link";
 import AuthForm from "@/components/AuthForm";
-import HeroSection from "@/components/HeroSection";
 import { createServerSupabaseClient } from "@/lib/supabase-server";
 import { DEPARTMENTS, EXERCISES } from "@/data/exercises";
 
@@ -12,10 +11,45 @@ export default async function HomePage() {
 
   return (
     <>
-      <HeroSection
-        exercisesCount={EXERCISES.length}
-        departmentsCount={DEPARTMENTS.length}
-      />
+      <section className="hero">
+        <div className="brand" style={{ fontSize: "0.8rem" }}>
+          A C T O R V E R S E
+        </div>
+        <h1>
+          Train Like an Athlete.
+          <br />
+          <em>Perform Like a Legend.</em>
+        </h1>
+        <p className="tagline">
+          A complete training ground for actors — voice, body, camera and
+          auditions — in one app.
+        </p>
+        <div className="hero-stats">
+          <div className="hstat">
+            <b>{EXERCISES.length}</b>
+            <span>Exercises</span>
+          </div>
+          <div className="hstat">
+            <b>{DEPARTMENTS.length}</b>
+            <span>Departments</span>
+          </div>
+          <div className="hstat">
+            <b>14</b>
+            <span>Monologues</span>
+          </div>
+        </div>
+        <div className="hero-cta">
+          <Link href="/exercises" className="btn btn-gold">
+            Browse Exercises
+          </Link>
+          <Link href="/timer" className="btn btn-ghost">
+            Open the Timer
+          </Link>
+          <Link href="/teleprompter" className="btn btn-ghost">
+            Open the Teleprompter
+          </Link>
+        </div>
+      </section>
 
       <section className="section" data-page="dashboard">
         <h2>Why ACTORVERSE?</h2>

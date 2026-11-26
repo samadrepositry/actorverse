@@ -248,6 +248,75 @@ function TeleprompterPageInner() {
     }
   }
 
+  /**
+   * Clean a phone photo before OCR: downscale to max ~2000 px wide,
+   * grayscale, and a contrast stretch (1st–99th percentile) so shadows
+   * and uneven light hurt less. Plain canvas 2D, no new dependencies.
+   * If cleanup fails for any reason the caller falls back to the raw
+   * photo — the scan never dies because of the cleanup.
+   */
+  async function cleanPhotoForOcr(dataUrl: string): Promise<string> {
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const el = new Image();
+      el.onload = () => resolve(el);
+      el.onerror = () => reject(new Error("Could not read the photo."));
+      el.src = dataUrl;
+    });
+    const MAX_W = 2000;
+    const scale = Math.min(1, MAX_W / img.naturalWidth);
+    const w = Math.max(1, Math.round(img.naturalWidth * scale));
+    const h = Math.max(1, Math.round(img.naturalHeight * scale));
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return dataUrl;
+    ctx.drawImage(img, 0, 0, w, h);
+    const imageData = ctx.getImageData(0, 0, w, h);
+    const d = imageData.data;
+    const total = w * h;
+    const grey = new Uint8Array(total);
+    const hist = new Uint32Array(256);
+    for (let i = 0; i < total; i++) {
+      const g = Math.round(
+        0.299 * d[i * 4] + 0.587 * d[i * 4 + 1] + 0.114 * d[i * 4 + 2],
+      );
+      grey[i] = g;
+      hist[g]++;
+    }
+    // Stretch between the 1st and 99th percentile so a dark shadow or a
+    // bright glare does not flatten the whole page.
+    const edge = total * 0.01;
+    let lo = 0;
+    let hi = 255;
+    let acc = 0;
+    for (let v = 0; v < 256; v++) {
+      acc += hist[v];
+      if (acc >= edge) {
+        lo = v;
+        break;
+      }
+    }
+    acc = 0;
+    for (let v = 255; v >= 0; v--) {
+      acc += hist[v];
+      if (acc >= edge) {
+        hi = v;
+        break;
+      }
+    }
+    const range = Math.max(1, hi - lo);
+    for (let i = 0; i < total; i++) {
+      const v = Math.round(((grey[i] - lo) / range) * 255);
+      const c = v < 0 ? 0 : v > 255 ? 255 : v;
+      d[i * 4] = c;
+      d[i * 4 + 1] = c;
+      d[i * 4 + 2] = c;
+    }
+    ctx.putImageData(imageData, 0, 0);
+    return canvas.toDataURL("image/png");
+  }
+
   /** Scan a photographed or uploaded page into the editable text box. */
   async function handleScanFile(file: File | undefined) {
     if (!file) return;
@@ -264,7 +333,19 @@ function TeleprompterPageInner() {
       setScanStatus("Reading the page…");
       try {
         const Tesseract = (await import("tesseract.js")).default;
-        const result = await Tesseract.recognize(dataUrl, "eng+urd", {
+        // Clean the photo first (raw phone shots carry shadows and
+        // uneven light); if cleanup fails, OCR the raw photo instead.
+        let ocrUrl = dataUrl;
+        try {
+          ocrUrl = await cleanPhotoForOcr(dataUrl);
+        } catch {
+          ocrUrl = dataUrl;
+        }
+        // Urdu ONLY: the English model hallucinates Latin words out of
+        // Nastaliq strokes. PSM 6: one dense block of text — a novel
+        // page. The worker is terminated after every scan so repeated
+        // scans never pile up workers.
+        const worker = await Tesseract.createWorker("urd", undefined, {
           logger: (m) => {
             if (
               m.status === "recognizing text" &&
@@ -276,14 +357,28 @@ function TeleprompterPageInner() {
             }
           },
         });
-        const text = (result?.data?.text ?? "").trim();
-        if (!text) throw new Error("No text found on the page.");
-        setOwnText(text);
-        setUseOwn(true);
-        setTitle("Scanned page");
-        setScanNotice(true);
-        setScanStatus("Page read. Check the words below, then press RECORD.");
-        setTakeError(null);
+        try {
+          await worker.setParameters({
+            tessedit_pageseg_mode: Tesseract.PSM.SINGLE_BLOCK,
+          });
+          const result = await worker.recognize(ocrUrl);
+          const text = (result?.data?.text ?? "").trim();
+          if (!text) throw new Error("No text found on the page.");
+          setOwnText(text);
+          setUseOwn(true);
+          setTitle("Scanned page");
+          setScanNotice(true);
+          setScanStatus(
+            "Page read. Check the words below, then press RECORD.",
+          );
+          setTakeError(null);
+        } finally {
+          try {
+            await worker.terminate();
+          } catch {
+            // Worker cleanup failure is not a scan failure.
+          }
+        }
       } catch {
         // Never fake a transcription: pin the photo as a picture prompt
         // and ask for the text to be typed or pasted instead.
@@ -503,6 +598,10 @@ function TeleprompterPageInner() {
                 onChange={(e) => void handleScanFile(e.target.files?.[0])}
               />
             </div>
+            <p className="sub" style={{ marginTop: 12, marginBottom: 0 }}>
+              Saaf scan ke liye: roshni barabar ho, page par saya na ho,
+              phone seedha page ke upar rakhein.
+            </p>
             {scanImage && (
               <img
                 src={scanImage}

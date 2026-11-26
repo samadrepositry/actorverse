@@ -37,6 +37,8 @@ export default function ScriptsPage() {
   const [uploadStage, setUploadStage] = useState<
     "idle" | "uploading" | "saving"
   >("idle");
+  /** Live upload percentage (0–100), or null when the total is unknown. */
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const [extractingId, setExtractingId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [messageOk, setMessageOk] = useState(false);
@@ -46,11 +48,14 @@ export default function ScriptsPage() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const loadedOnce = useRef(false);
   const mountedRef = useRef(true);
+  /** Aborts the in-flight upload when the user taps Cancel. */
+  const uploadAbortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     mountedRef.current = true;
     return () => {
       mountedRef.current = false;
+      uploadAbortRef.current?.abort();
     };
   }, []);
 
@@ -105,15 +110,32 @@ export default function ScriptsPage() {
       setMessageOk(false);
       return;
     }
-    // Stage 1: the file goes up. Stage 2: the row is saved. Both are
-    // quick; the PDF text is read in the background afterwards, so the
-    // button never sits on "Uploading…" for minutes on a big PDF.
+    // Stage 1: the file goes up, with a live percentage so a big PDF on
+    // a slow connection never looks stuck. The user can cancel, and a
+    // stalled upload stops itself with a plain message. Stage 2: the
+    // row is saved. The PDF text is read in the background afterwards,
+    // so the button never sits on "Uploading…" for minutes on a big PDF.
+    // On failure the file, title and text stay put, so retry is one tap.
+    const controller = new AbortController();
+    uploadAbortRef.current = controller;
+    setUploadProgress(0);
     setUploadStage("uploading");
     setMessage(null);
-    const result = await uploadScript(file, title, scriptText, (stage) =>
-      setUploadStage(stage),
+    const result = await uploadScript(
+      file,
+      title,
+      scriptText,
+      (stage) => setUploadStage(stage),
+      {
+        signal: controller.signal,
+        onProgress: (pct) => {
+          if (mountedRef.current) setUploadProgress(pct);
+        },
+      },
     );
+    uploadAbortRef.current = null;
     setUploadStage("idle");
+    setUploadProgress(null);
     setMessageOk(result.ok);
     setMessage(result.message);
     if (!result.ok) return;
@@ -137,6 +159,10 @@ export default function ScriptsPage() {
           : "Script saved, but the text could not be read from this PDF. Tap it in the Teleprompter to try again.",
       );
     }
+  }
+
+  function handleCancelUpload() {
+    uploadAbortRef.current?.abort();
   }
 
   async function handleOpen(row: ScriptRow) {
@@ -271,8 +297,8 @@ export default function ScriptsPage() {
               >
                 {uploadStage === "uploading" ? (
                   <>
-                    <span className="spinner" aria-hidden="true" /> Uploading
-                    file…
+                    <span className="spinner" aria-hidden="true" /> Uploading…
+                    {uploadProgress !== null ? ` ${uploadProgress}%` : ""}
                   </>
                 ) : uploadStage === "saving" ? (
                   <>
@@ -282,6 +308,46 @@ export default function ScriptsPage() {
                   "Upload script"
                 )}
               </button>
+              {uploadStage === "uploading" && (
+                <>
+                  <div
+                    role="progressbar"
+                    aria-valuenow={uploadProgress ?? undefined}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-label="Upload progress"
+                    style={{
+                      height: 8,
+                      borderRadius: 999,
+                      background: "rgba(255,255,255,0.12)",
+                      overflow: "hidden",
+                    }}
+                  >
+                    <div
+                      style={{
+                        height: "100%",
+                        width: `${uploadProgress ?? 0}%`,
+                        background: "#f2c94c",
+                        borderRadius: 999,
+                        transition: "width 0.3s ease",
+                      }}
+                    />
+                  </div>
+                  <p
+                    className="sub"
+                    style={{ marginTop: 6, marginBottom: 0 }}
+                  >
+                    Keep this page open until it says Saved.
+                  </p>
+                  <button
+                    type="button"
+                    className="btn btn-line"
+                    onClick={handleCancelUpload}
+                  >
+                    Cancel upload
+                  </button>
+                </>
+              )}
             </div>
           </div>
 

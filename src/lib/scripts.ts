@@ -13,8 +13,16 @@
 // minutes to read on a phone, and the upload must never wait for it.
 // If background extraction fails, the text stays empty and the
 // Teleprompter reads it again when the PDF is tapped.
+//
+// Upload progress: the file goes up over a raw XHR POST so the UI can
+// show a live percentage (supabase-js has no progress callback). A
+// stalled upload — no bytes for 60 seconds — or one running past 5
+// minutes is stopped with a plain message, and the user can cancel and
+// retry. If the XHR path errors, the plain supabase-js upload runs as
+// a fallback.
 
 import { createClient, isSupabaseConfigured } from "./supabase";
+import { SUPABASE_ANON_KEY, SUPABASE_URL } from "./supabase-shared";
 import { extractPdfText } from "./pdfText";
 
 export const SCRIPTS_BUCKET = "scripts";
@@ -33,6 +41,8 @@ export interface ScriptResult {
   ok: boolean;
   message: string;
   row?: ScriptRow;
+  /** True when the user cancelled the upload. */
+  cancelled?: boolean;
   /** True when the text was read out of the PDF automatically. */
   textExtracted?: boolean;
   /**
@@ -42,6 +52,167 @@ export interface ScriptResult {
    * can await it to refresh the list — it never blocks the save.
    */
   extractionDone?: Promise<boolean>;
+}
+
+/** Options for uploadScript: live progress + user cancel. */
+export interface UploadScriptOptions {
+  /** Called with 0–100 as bytes go up, or null when the total is unknown. */
+  onProgress?: (percent: number | null) => void;
+  /** Abort this to cancel the upload. */
+  signal?: AbortSignal;
+}
+
+const SLOW_UPLOAD_MESSAGE =
+  "Upload stopped — the internet is slow. Please try again.";
+/** No progress at all for this long means the upload has stalled. */
+const STALL_TIMEOUT_MS = 60_000;
+/** Hard cap on the whole upload, however slow the connection is. */
+const TOTAL_TIMEOUT_MS = 5 * 60_000;
+
+type XhrUploadOutcome =
+  | { ok: true }
+  | {
+      ok: false;
+      aborted: "cancelled" | "stall" | "timeout";
+      message: string;
+    }
+  | { ok: false; aborted: null; message: string };
+
+/**
+ * Upload a file to Supabase Storage with a raw XHR POST, so the UI can
+ * show a live percentage. supabase-js `.upload()` has no progress
+ * callback, so it is kept only as a fallback below. Aborts when the
+ * caller cancels, when no bytes move for 60 seconds, or after 5
+ * minutes total — a stalled upload on a slow phone connection must
+ * fail fast with a plain message instead of spinning forever.
+ */
+function uploadViaXhr(
+  supabase: ReturnType<typeof createClient>,
+  path: string,
+  file: File,
+  onProgress: (percent: number | null) => void,
+  signal: AbortSignal,
+): Promise<XhrUploadOutcome> {
+  return new Promise((resolve) => {
+    let xhr: XMLHttpRequest | null = null;
+    let settled = false;
+    let abortReason: "cancelled" | "stall" | "timeout" | null = null;
+    let lastProgressAt = Date.now();
+    let stallTimer: ReturnType<typeof setInterval> | undefined;
+    let totalTimer: ReturnType<typeof setTimeout> | undefined;
+
+    const finish = (outcome: XhrUploadOutcome) => {
+      if (settled) return;
+      settled = true;
+      if (stallTimer) clearInterval(stallTimer);
+      if (totalTimer) clearTimeout(totalTimer);
+      signal.removeEventListener("abort", onSignalAbort);
+      resolve(outcome);
+    };
+    const onSignalAbort = () => {
+      abortReason = "cancelled";
+      if (xhr) xhr.abort();
+    };
+
+    if (signal.aborted) {
+      resolve({ ok: false, aborted: "cancelled", message: "Upload cancelled." });
+      return;
+    }
+    signal.addEventListener("abort", onSignalAbort);
+
+    void (async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (settled) return;
+      const token = session?.access_token;
+      if (!token) {
+        finish({
+          ok: false,
+          aborted: null,
+          message: "Sign in to save scripts online.",
+        });
+        return;
+      }
+      if (signal.aborted) {
+        finish({ ok: false, aborted: "cancelled", message: "Upload cancelled." });
+        return;
+      }
+      const encodedPath = path
+        .split("/")
+        .map((part) => encodeURIComponent(part))
+        .join("/");
+      const url = `${SUPABASE_URL}/storage/v1/object/${SCRIPTS_BUCKET}/${encodedPath}`;
+      xhr = new XMLHttpRequest();
+      stallTimer = setInterval(() => {
+        if (Date.now() - lastProgressAt > STALL_TIMEOUT_MS) {
+          abortReason = "stall";
+          if (xhr) xhr.abort();
+        }
+      }, 5000);
+      totalTimer = setTimeout(() => {
+        abortReason = "timeout";
+        if (xhr) xhr.abort();
+      }, TOTAL_TIMEOUT_MS);
+      xhr.open("POST", url);
+      xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+      xhr.setRequestHeader("apikey", SUPABASE_ANON_KEY);
+      xhr.setRequestHeader("Content-Type", "application/pdf");
+      xhr.setRequestHeader("x-upsert", "false");
+      xhr.upload.onprogress = (event) => {
+        lastProgressAt = Date.now();
+        if (event.lengthComputable && event.total > 0) {
+          onProgress(
+            Math.min(100, Math.round((event.loaded / event.total) * 100)),
+          );
+        } else {
+          onProgress(null);
+        }
+      };
+      xhr.onload = () => {
+        if (!xhr) return;
+        if (xhr.status === 200 || xhr.status === 201) {
+          finish({ ok: true });
+        } else {
+          let detail = "";
+          try {
+            const parsed = JSON.parse(xhr.responseText);
+            detail = parsed?.message || parsed?.error || "";
+          } catch {
+            detail = xhr.responseText || "";
+          }
+          finish({
+            ok: false,
+            aborted: null,
+            message: detail || `Upload failed (status ${xhr.status}).`,
+          });
+        }
+      };
+      xhr.onerror = () => {
+        finish({
+          ok: false,
+          aborted: null,
+          message: "Could not reach the upload server.",
+        });
+      };
+      xhr.onabort = () => {
+        if (abortReason === "cancelled") {
+          finish({
+            ok: false,
+            aborted: "cancelled",
+            message: "Upload cancelled.",
+          });
+        } else {
+          finish({
+            ok: false,
+            aborted: abortReason ?? "stall",
+            message: SLOW_UPLOAD_MESSAGE,
+          });
+        }
+      };
+      xhr.send(file);
+    })();
+  });
 }
 
 function friendlyUploadError(message: string): string {
@@ -83,14 +254,21 @@ export function validateScriptFile(file: File): string | null {
  * was pasted, the PDF text is then read in the background (pdf.js) and
  * saved onto the row when it finishes; `result.extractionDone` resolves
  * when that happens. `onStage` reports the two visible steps so the UI
- * can show "Uploading file…" then "Saving…" instead of one stuck
- * "Uploading…" spinner.
+ * can show "Uploading…" then "Saving…" instead of one stuck
+ * "Uploading…" spinner. `options.onProgress` reports a live 0–100
+ * percentage while the file goes up, and `options.signal` lets the
+ * caller cancel; a stalled upload (no progress for 60 seconds) or one
+ * running past 5 minutes is stopped with a plain message. The XHR
+ * upload is tried first; if it errors (auth/CORS/network quirk), the
+ * plain supabase-js upload runs as a fallback — the user is never left
+ * with no upload path.
  */
 export async function uploadScript(
   file: File,
   title: string,
   scriptText: string,
   onStage?: (stage: "uploading" | "saving") => void,
+  options?: UploadScriptOptions,
 ): Promise<ScriptResult> {
   const problem = validateScriptFile(file);
   if (problem) return { ok: false, message: problem };
@@ -112,11 +290,36 @@ export async function uploadScript(
     const cleanTitle = title.trim() || file.name.replace(/\.pdf$/i, "");
     const path = `${user.id}/${Date.now()}.pdf`;
     onStage?.("uploading");
-    const { error: uploadError } = await supabase.storage
-      .from(SCRIPTS_BUCKET)
-      .upload(path, file, { contentType: "application/pdf", upsert: false });
-    if (uploadError) {
-      return { ok: false, message: friendlyUploadError(uploadError.message) };
+    const onProgress = options?.onProgress ?? (() => {});
+    const signal =
+      options?.signal ?? new AbortController().signal;
+    const xhrOutcome = await uploadViaXhr(
+      supabase,
+      path,
+      file,
+      onProgress,
+      signal,
+    );
+    if (xhrOutcome.ok) {
+      // Uploaded — fall through to saving the row.
+    } else if (xhrOutcome.aborted === "cancelled") {
+      return { ok: false, cancelled: true, message: "Upload cancelled." };
+    } else if (
+      xhrOutcome.aborted === "stall" ||
+      xhrOutcome.aborted === "timeout"
+    ) {
+      return { ok: false, message: SLOW_UPLOAD_MESSAGE };
+    } else {
+      // XHR failed (auth/CORS/network quirk) — fall back to the plain
+      // supabase-js upload, which has no progress reporting but always
+      // works when the session is valid.
+      onProgress(null);
+      const { error: uploadError } = await supabase.storage
+        .from(SCRIPTS_BUCKET)
+        .upload(path, file, { contentType: "application/pdf", upsert: false });
+      if (uploadError) {
+        return { ok: false, message: friendlyUploadError(uploadError.message) };
+      }
     }
     // Save the row right away — pasted text if given, otherwise no text
     // yet. The PDF text is read in the background below; the user never

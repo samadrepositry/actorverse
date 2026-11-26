@@ -70,11 +70,12 @@ button {
   padding: 0 16px 64px;
 }
 
-/* App shell: content sits beside the fixed sidebar on desktop,
-   below the mobile top bar on phones. */
+/* App shell: content sits beside the fixed sidebar on desktop.
+   On phones the top bar is in normal flow and takes its own 60px,
+   so no extra top padding is needed here. */
 .app-shell {
   min-height: 100vh;
-  padding-top: 60px;
+  padding-top: 0;
 }
 @media (min-width: 900px) {
   .app-shell {
@@ -220,9 +221,12 @@ button {
   background: var(--surface-2);
 }
 
-/* Mobile top bar */
+/* Mobile top bar — part of normal page flow (NOT fixed): it scrolls away
+   with the page, so a section heading can never slide underneath it and
+   get its top cut off (the "Why ACTORVERSE?" heading used to render as
+   "wny ACTORVERSE?" under this bar). */
 .topbar {
-  position: fixed;
+  position: static;
   top: 0;
   left: 0;
   right: 0;
@@ -439,6 +443,8 @@ h2 {
 }
 .section {
   padding-top: 28px;
+  /* Anchor jumps land the section below any header. */
+  scroll-margin-top: 76px;
 }
 
 /* Filters */

@@ -24,6 +24,17 @@ export default async function HomePage() {
           A complete training ground for actors — voice, body, camera and
           auditions — in one app.
         </p>
+        <div className="hero-cta">
+          <Link href="/exercises" className="btn btn-gold">
+            Browse Exercises
+          </Link>
+          <Link href="/timer" className="btn btn-ghost">
+            Open the Timer
+          </Link>
+          <Link href="/teleprompter" className="btn btn-ghost">
+            Open the Teleprompter
+          </Link>
+        </div>
         <div className="hero-stats">
           <div className="hstat">
             <b>{EXERCISES.length}</b>
@@ -37,17 +48,6 @@ export default async function HomePage() {
             <b>14</b>
             <span>Monologues</span>
           </div>
-        </div>
-        <div className="hero-cta">
-          <Link href="/exercises" className="btn btn-gold">
-            Browse Exercises
-          </Link>
-          <Link href="/timer" className="btn btn-ghost">
-            Open the Timer
-          </Link>
-          <Link href="/teleprompter" className="btn btn-ghost">
-            Open the Teleprompter
-          </Link>
         </div>
       </section>
 

@@ -12,42 +12,129 @@ export default async function HomePage() {
   return (
     <>
       <section className="hero">
-        <div className="brand" style={{ fontSize: "0.8rem" }}>
-          A C T O R V E R S E
-        </div>
-        <h1>
-          Train Like an Athlete.
-          <br />
-          <em>Perform Like a Legend.</em>
-        </h1>
-        <p className="tagline">
-          A complete training ground for actors — voice, body, camera and
-          auditions — in one app.
-        </p>
-        <div className="hero-stats">
-          <div className="hstat">
-            <b>{EXERCISES.length}</b>
-            <span>Exercises</span>
+        <div className="hero-glow" aria-hidden="true" />
+        <div className="hero-beams" aria-hidden="true" />
+        <div className="hero-grain" aria-hidden="true" />
+        <div className="hero-inner">
+          <div className="brand" style={{ fontSize: "0.8rem" }}>
+            A C T O R V E R S E
           </div>
-          <div className="hstat">
-            <b>{DEPARTMENTS.length}</b>
-            <span>Departments</span>
+          <span className="hero-rule" aria-hidden="true" />
+          <h1>
+            Train Like an Athlete.
+            <br />
+            <em>Perform Like a Legend.</em>
+          </h1>
+          <p className="tagline">
+            A complete training ground for actors — voice, body, camera and
+            auditions — in one app.
+          </p>
+          <div className="hero-stats">
+            <div className="hstat">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+                <rect x="1.5" y="9" width="3.5" height="6" rx="1" />
+                <rect x="19" y="9" width="3.5" height="6" rx="1" />
+                <rect x="5" y="11" width="14" height="2" rx="1" />
+              </svg>
+              <b>{EXERCISES.length}</b>
+              <span>Exercises</span>
+            </div>
+            <div className="hstat">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+                <rect x="3.5" y="3.5" width="7" height="7" rx="1.5" />
+                <rect x="13.5" y="3.5" width="7" height="7" rx="1.5" />
+                <rect x="3.5" y="13.5" width="7" height="7" rx="1.5" />
+                <rect x="13.5" y="13.5" width="7" height="7" rx="1.5" />
+              </svg>
+              <b>{DEPARTMENTS.length}</b>
+              <span>Departments</span>
+            </div>
+            <div className="hstat">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+                <path d="M6 2.5h9L19 6.5v15H6z" />
+                <path d="M14.5 2.5v4.5H19" />
+                <path d="M9 11h6M9 14.5h6M9 18h4" />
+              </svg>
+              <b>14</b>
+              <span>Monologues</span>
+            </div>
           </div>
-          <div className="hstat">
-            <b>14</b>
-            <span>Monologues</span>
+          <div className="hero-cta">
+            <Link href="/exercises" className="btn btn-gold">
+              Browse Exercises
+            </Link>
+            <Link href="/timer" className="btn btn-ghost">
+              Open the Timer
+            </Link>
+            <Link href="/teleprompter" className="btn btn-ghost">
+              Open the Teleprompter
+            </Link>
           </div>
-        </div>
-        <div className="hero-cta">
-          <Link href="/exercises" className="btn btn-gold">
-            Browse Exercises
-          </Link>
-          <Link href="/timer" className="btn btn-ghost">
-            Open the Timer
-          </Link>
-          <Link href="/teleprompter" className="btn btn-ghost">
-            Open the Teleprompter
-          </Link>
+          <p className="hero-free">
+            <span className="hero-free-dot" aria-hidden="true" />
+            Free · Rs 0 · No card
+          </p>
+          <div className="hero-features">
+            <Link href="/teleprompter" className="hero-feature">
+              <span
+                className="hero-feature-icon"
+                style={{ color: "#ffb454", background: "rgba(255, 180, 84, 0.14)" }}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <rect x="2" y="6" width="13" height="12" rx="2" />
+                  <path d="M15 10.5l7-3.5v10l-7-3.5" />
+                </svg>
+              </span>
+              <span>
+                <b>Teleprompter</b>
+                <i>Record while you read</i>
+              </span>
+            </Link>
+            <Link href="/coach" className="hero-feature">
+              <span
+                className="hero-feature-icon"
+                style={{ color: "#ff9a5c", background: "rgba(255, 154, 92, 0.14)" }}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5c-1.5 0-2.9-.35-4.1-1L3 20l1.1-5.4A8.5 8.5 0 1 1 21 11.5z" />
+                </svg>
+              </span>
+              <span>
+                <b>AI Coach</b>
+                <i>Your coach in English or Urdu</i>
+              </span>
+            </Link>
+            <Link href="/scripts" className="hero-feature">
+              <span
+                className="hero-feature-icon"
+                style={{ color: "#b48cff", background: "rgba(180, 140, 255, 0.14)" }}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M6 2.5h9L19 6.5v15H6z" />
+                  <path d="M14.5 2.5v4.5H19" />
+                  <path d="M9 11h6M9 14.5h6M9 18h4" />
+                </svg>
+              </span>
+              <span>
+                <b>Script Vault</b>
+                <i>Your private PDFs</i>
+              </span>
+            </Link>
+            <Link href="/auditions" className="hero-feature">
+              <span
+                className="hero-feature-icon"
+                style={{ color: "#ff8f6b", background: "rgba(255, 143, 107, 0.14)" }}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M12 2.5l2.6 5.6 6.1.7-4.5 4.2 1.2 6-5.4-3-5.4 3 1.2-6L3.3 8.8l6.1-.7z" />
+                </svg>
+              </span>
+              <span>
+                <b>Auditions</b>
+                <i>Find or post auditions</i>
+              </span>
+            </Link>
+          </div>
         </div>
       </section>
 

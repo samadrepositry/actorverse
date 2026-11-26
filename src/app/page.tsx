@@ -3,6 +3,19 @@ import type { CSSProperties } from "react";
 import AuthForm from "@/components/AuthForm";
 import { createServerSupabaseClient } from "@/lib/supabase-server";
 import { DEPARTMENTS, EXERCISES } from "@/data/exercises";
+import { NAV_ACCENTS, type Accent } from "@/lib/theme";
+
+/** Design-system accent vars for a card + its chip, from NAV_ACCENTS.
+ *  Sets --card-accent / --card-soft (used by .card-accent) and
+ *  --chip / --chip-soft (used by .chip-accent). */
+function dsAccent(accent: Accent): CSSProperties {
+  return {
+    "--card-accent": accent.color,
+    "--card-soft": accent.soft,
+    "--chip": accent.color,
+    "--chip-soft": accent.soft,
+  } as CSSProperties;
+}
 
 export default async function HomePage() {
   const supabase = createServerSupabaseClient();
@@ -26,23 +39,25 @@ export default async function HomePage() {
           auditions — in one app.
         </p>
         <div className="hero-cta">
-          <Link href="/exercises" className="btn btn-gold">
+          <Link href="/exercises" className="btn btn-primary">
             Browse Exercises
           </Link>
-          <Link href="/timer" className="btn btn-ghost">
+          <Link href="/timer" className="btn btn-secondary">
             Open the Timer
           </Link>
-          <Link href="/teleprompter" className="btn btn-ghost">
+          <Link href="/teleprompter" className="btn btn-secondary">
             Open the Teleprompter
           </Link>
         </div>
         <div className="hero-stats">
           <div
-            className="hstat"
+            className="hstat card-accent"
             style={
               {
                 "--hstat-accent": "#6ec1ff",
                 "--hstat-soft": "rgba(110, 193, 255, 0.12)",
+                "--card-accent": "#6ec1ff",
+                "--card-soft": "rgba(110, 193, 255, 0.12)",
               } as CSSProperties
             }
           >
@@ -55,11 +70,13 @@ export default async function HomePage() {
             <span>Exercises</span>
           </div>
           <div
-            className="hstat"
+            className="hstat card-accent"
             style={
               {
                 "--hstat-accent": "#b48cff",
                 "--hstat-soft": "rgba(180, 140, 255, 0.12)",
+                "--card-accent": "#b48cff",
+                "--card-soft": "rgba(180, 140, 255, 0.12)",
               } as CSSProperties
             }
           >
@@ -75,11 +92,13 @@ export default async function HomePage() {
             <span>Departments</span>
           </div>
           <div
-            className="hstat"
+            className="hstat card-accent"
             style={
               {
                 "--hstat-accent": "#4dd8c4",
                 "--hstat-soft": "rgba(77, 216, 196, 0.12)",
+                "--card-accent": "#4dd8c4",
+                "--card-soft": "rgba(77, 216, 196, 0.12)",
               } as CSSProperties
             }
           >
@@ -96,13 +115,20 @@ export default async function HomePage() {
       </section>
 
       <section className="section" data-page="dashboard">
-        <h2>Why ACTORVERSE?</h2>
-        <p className="sub">
-          One app for the whole craft — practice, record, track and find
-          work, without paying for five different tools.
-        </p>
+        <div className="page-head">
+          <h2>Why ACTORVERSE?</h2>
+          <span className="accent-bar" aria-hidden="true"></span>
+          <p className="sub">
+            One app for the whole craft — practice, record, track and find
+            work, without paying for five different tools.
+          </p>
+        </div>
         <div className="why-grid">
-          <Link href="/exercises" className="card why-card">
+          <Link
+            href="/exercises"
+            className="card why-card card-accent"
+            style={dsAccent(NAV_ACCENTS.exercises)}
+          >
             <span className="why-num">1</span>
             <h3>Train every skill</h3>
             <p>
@@ -110,7 +136,11 @@ export default async function HomePage() {
               camera craft and more, each with a built-in timer.
             </p>
           </Link>
-          <Link href="/teleprompter" className="card why-card">
+          <Link
+            href="/teleprompter"
+            className="card why-card card-accent"
+            style={dsAccent(NAV_ACCENTS.teleprompter)}
+          >
             <span className="why-num">2</span>
             <h3>Record with the Teleprompter</h3>
             <p>
@@ -118,7 +148,11 @@ export default async function HomePage() {
               Medium and Close-up framing, so the take looks right.
             </p>
           </Link>
-          <Link href="/scripts" className="card why-card">
+          <Link
+            href="/scripts"
+            className="card why-card card-accent"
+            style={dsAccent(NAV_ACCENTS.scripts)}
+          >
             <span className="why-num">3</span>
             <h3>Your private Script Vault</h3>
             <p>
@@ -126,7 +160,11 @@ export default async function HomePage() {
               and send the text straight to the Teleprompter.
             </p>
           </Link>
-          <Link href="/monologues" className="card why-card">
+          <Link
+            href="/monologues"
+            className="card why-card card-accent"
+            style={dsAccent(NAV_ACCENTS.monologues)}
+          >
             <span className="why-num">4</span>
             <h3>14 original monologues</h3>
             <p>
@@ -134,7 +172,11 @@ export default async function HomePage() {
               it, and send it to the Teleprompter in one tap.
             </p>
           </Link>
-          <Link href="/plans" className="card why-card">
+          <Link
+            href="/plans"
+            className="card why-card card-accent"
+            style={dsAccent(NAV_ACCENTS.plans)}
+          >
             <span className="why-num">5</span>
             <h3>7 training plans</h3>
             <p>
@@ -142,7 +184,11 @@ export default async function HomePage() {
               minutes a day and weeks, and enrol free.
             </p>
           </Link>
-          <Link href="/coach" className="card why-card">
+          <Link
+            href="/coach"
+            className="card why-card card-accent"
+            style={dsAccent(NAV_ACCENTS.coach)}
+          >
             <span className="why-num">6</span>
             <h3>AI Coach</h3>
             <p>
@@ -150,7 +196,11 @@ export default async function HomePage() {
               at a time, based on what you ask.
             </p>
           </Link>
-          <Link href="/analytics" className="card why-card">
+          <Link
+            href="/analytics"
+            className="card why-card card-accent"
+            style={dsAccent(NAV_ACCENTS.analytics)}
+          >
             <span className="why-num">7</span>
             <h3>See your progress</h3>
             <p>
@@ -158,7 +208,11 @@ export default async function HomePage() {
               practice — minutes, sessions and streaks, nothing faked.
             </p>
           </Link>
-          <Link href="/community" className="card why-card">
+          <Link
+            href="/community"
+            className="card why-card card-accent"
+            style={dsAccent(NAV_ACCENTS.community)}
+          >
             <span className="why-num">8</span>
             <h3>Actors helping actors</h3>
             <p>
@@ -174,165 +228,168 @@ export default async function HomePage() {
       </section>
 
       <section className="section" data-page="dashboard">
-        <h2>
-          {user ? "Welcome back. Ready to train today?" : "Start training today"}
-        </h2>
-        <p className="sub">
-          Pick a tool and start. Sign in to save your sessions and track your
-          progress — without an account, everything still works, it just does
-          not save.
-        </p>
+        <div className="page-head">
+          <h2>
+            {user ? "Welcome back. Ready to train today?" : "Start training today"}
+          </h2>
+          <span className="accent-bar" aria-hidden="true"></span>
+          <p className="sub">
+            Pick a tool and start. Sign in to save your sessions and track your
+            progress — without an account, everything still works, it just does
+            not save.
+          </p>
+        </div>
         <div className="grid">
-          <div className="card">
-            <span className="chip">Daily work</span>
+          <div className="card card-accent" style={dsAccent(NAV_ACCENTS.exercises)}>
+            <span className="chip chip-accent" style={dsAccent(NAV_ACCENTS.exercises)}>Daily work</span>
             <h3>Exercise Library</h3>
             <p>
               170 exercises across 10 departments — voice, body, emotion,
               camera craft and more, each with a built-in timer.
             </p>
             <div className="rowbtns">
-              <Link href="/exercises" className="btn btn-dark">
+              <Link href="/exercises" className="btn btn-secondary">
                 Open
               </Link>
             </div>
           </div>
-          <div className="card">
-            <span className="chip">Practice</span>
+          <div className="card card-accent" style={dsAccent(NAV_ACCENTS.timer)}>
+            <span className="chip chip-accent" style={dsAccent(NAV_ACCENTS.timer)}>Practice</span>
             <h3>My Timer</h3>
             <p>
               Simple practice timer with presets. Pick a time, press Start —
               when it finishes, it saves by itself.
             </p>
             <div className="rowbtns">
-              <Link href="/timer" className="btn btn-dark">
+              <Link href="/timer" className="btn btn-secondary">
                 Open
               </Link>
             </div>
           </div>
-          <div className="card">
-            <span className="chip">Record</span>
+          <div className="card card-accent" style={dsAccent(NAV_ACCENTS.teleprompter)}>
+            <span className="chip chip-accent" style={dsAccent(NAV_ACCENTS.teleprompter)}>Record</span>
             <h3>Teleprompter</h3>
             <p>
               Pick a monologue or paste your own text, then record while the
               script scrolls — with Wide, Medium and Close-up framing.
             </p>
             <div className="rowbtns">
-              <Link href="/teleprompter" className="btn btn-dark">
+              <Link href="/teleprompter" className="btn btn-secondary">
                 Open
               </Link>
             </div>
           </div>
-          <div className="card">
-            <span className="chip">Record</span>
+          <div className="card card-accent" style={dsAccent(NAV_ACCENTS.studio)}>
+            <span className="chip chip-accent" style={dsAccent(NAV_ACCENTS.studio)}>Record</span>
             <h3>Studio</h3>
             <p>
               Camera Studio to record takes, plus My Private Recordings —
               your saved takes, each with Play, Save to phone and Delete.
             </p>
             <div className="rowbtns">
-              <Link href="/studio" className="btn btn-dark">
+              <Link href="/studio" className="btn btn-secondary">
                 Open
               </Link>
             </div>
           </div>
-          <div className="card">
-            <span className="chip">Progress</span>
+          <div className="card card-accent" style={dsAccent(NAV_ACCENTS.analytics)}>
+            <span className="chip chip-accent" style={dsAccent(NAV_ACCENTS.analytics)}>Progress</span>
             <h3>Analytics</h3>
             <p>
               Your practice minutes, streak, weekly goal and progress by
               department — all in one place.
             </p>
             <div className="rowbtns">
-              <Link href="/analytics" className="btn btn-dark">
+              <Link href="/analytics" className="btn btn-secondary">
                 Open
               </Link>
             </div>
           </div>
-          <div className="card">
-            <span className="chip">Scripts</span>
+          <div className="card card-accent" style={dsAccent(NAV_ACCENTS.scripts)}>
+            <span className="chip chip-accent" style={dsAccent(NAV_ACCENTS.scripts)}>Scripts</span>
             <h3>Script Vault</h3>
             <p>
               Your private PDF scripts — upload, view, rename and send the
               text to the Teleprompter.
             </p>
             <div className="rowbtns">
-              <Link href="/scripts" className="btn btn-dark">
+              <Link href="/scripts" className="btn btn-secondary">
                 Open
               </Link>
             </div>
           </div>
-          <div className="card">
-            <span className="chip">Practise</span>
+          <div className="card card-accent" style={dsAccent(NAV_ACCENTS.monologues)}>
+            <span className="chip chip-accent" style={dsAccent(NAV_ACCENTS.monologues)}>Practise</span>
             <h3>Monologues</h3>
             <p>
               14 original monologues to read and perform. Send any of them
               straight to the Teleprompter.
             </p>
             <div className="rowbtns">
-              <Link href="/monologues" className="btn btn-dark">
+              <Link href="/monologues" className="btn btn-secondary">
                 Open
               </Link>
             </div>
           </div>
-          <div className="card">
-            <span className="chip">Follow a plan</span>
+          <div className="card card-accent" style={dsAccent(NAV_ACCENTS.plans)}>
+            <span className="chip chip-accent" style={dsAccent(NAV_ACCENTS.plans)}>Follow a plan</span>
             <h3>Training Plans</h3>
             <p>
               7 guided plans plus your own custom plan. Enrol free — Rs 0.
             </p>
             <div className="rowbtns">
-              <Link href="/plans" className="btn btn-dark">
+              <Link href="/plans" className="btn btn-secondary">
                 Open
               </Link>
             </div>
           </div>
-          <div className="card">
-            <span className="chip">Ask</span>
+          <div className="card card-accent" style={dsAccent(NAV_ACCENTS.coach)}>
+            <span className="chip chip-accent" style={dsAccent(NAV_ACCENTS.coach)}>Ask</span>
             <h3>AI Coach</h3>
             <p>
               Your acting coach in English or Urdu. Simple answers, one
               practical exercise at a time.
             </p>
             <div className="rowbtns">
-              <Link href="/coach" className="btn btn-dark">
+              <Link href="/coach" className="btn btn-secondary">
                 Open
               </Link>
             </div>
           </div>
-          <div className="card">
-            <span className="chip">Progress</span>
+          <div className="card card-accent" style={dsAccent(NAV_ACCENTS.achievements)}>
+            <span className="chip chip-accent" style={dsAccent(NAV_ACCENTS.achievements)}>Progress</span>
             <h3>Achievements</h3>
             <p>
               Badges earned from your real practice — minutes, sessions and
               streaks. Nothing faked.
             </p>
             <div className="rowbtns">
-              <Link href="/achievements" className="btn btn-dark">
+              <Link href="/achievements" className="btn btn-secondary">
                 Open
               </Link>
             </div>
           </div>
-          <div className="card">
-            <span className="chip">People</span>
+          <div className="card card-accent" style={dsAccent(NAV_ACCENTS.community)}>
+            <span className="chip chip-accent" style={dsAccent(NAV_ACCENTS.community)}>People</span>
             <h3>Community</h3>
             <p>
               Actors helping actors. Share a win, a question, or a tip.
             </p>
             <div className="rowbtns">
-              <Link href="/community" className="btn btn-dark">
+              <Link href="/community" className="btn btn-secondary">
                 Open
               </Link>
             </div>
           </div>
-          <div className="card">
-            <span className="chip">Work</span>
+          <div className="card card-accent" style={dsAccent(NAV_ACCENTS.auditions)}>
+            <span className="chip chip-accent" style={dsAccent(NAV_ACCENTS.auditions)}>Work</span>
             <h3>Audition Center</h3>
             <p>
               Find auditions or post one of your own — and apply in a few
               taps.
             </p>
             <div className="rowbtns">
-              <Link href="/auditions" className="btn btn-dark">
+              <Link href="/auditions" className="btn btn-secondary">
                 Open
               </Link>
             </div>
@@ -349,6 +406,13 @@ export default async function HomePage() {
 
       {!user && (
         <section className="section" style={{ maxWidth: 560, margin: "0 auto" }}>
+          <div className="page-head" style={{ textAlign: "center" }}>
+            <span
+              className="accent-bar"
+              aria-hidden="true"
+              style={{ margin: "0 auto" }}
+            ></span>
+          </div>
           <AuthForm />
         </section>
       )}

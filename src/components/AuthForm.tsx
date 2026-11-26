@@ -98,8 +98,20 @@ export default function AuthForm() {
         : "Enter your email and we will send you a link to choose a new password.";
 
   return (
-    <div className="card" id="signin">
+    <div className="card card-accent card-gold" id="signin">
       <h3>{title}</h3>
+      <span
+        aria-hidden="true"
+        style={{
+          display: "block",
+          width: 54,
+          height: 4,
+          borderRadius: 999,
+          background: "var(--gold-gradient)",
+          boxShadow: "0 0 14px rgba(242, 201, 76, 0.45)",
+          margin: "2px 0 12px",
+        }}
+      />
       <p>{intro}</p>
       {!configured && (
         <p className="note" style={{ marginTop: 12 }}>
@@ -111,10 +123,12 @@ export default function AuthForm() {
       <form className="form" onSubmit={handleSubmit} style={{ marginTop: 16 }}>
         {mode === "signup" && (
           <div>
-            <label htmlFor="full-name">Full name</label>
+            <label htmlFor="full-name" className="field-label">Full name</label>
             <input
               id="full-name"
               type="text"
+              className="field"
+              style={{ minHeight: 44 }}
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               placeholder="Your name"
@@ -123,11 +137,13 @@ export default function AuthForm() {
           </div>
         )}
         <div>
-          <label htmlFor="auth-email">Email</label>
+          <label htmlFor="auth-email" className="field-label">Email</label>
           <input
             id="auth-email"
             type="email"
             required
+            className="field"
+            style={{ minHeight: 44 }}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@example.com"
@@ -136,12 +152,14 @@ export default function AuthForm() {
         </div>
         {mode !== "forgot" && (
           <div>
-            <label htmlFor="auth-password">Password</label>
+            <label htmlFor="auth-password" className="field-label">Password</label>
             <input
               id="auth-password"
               type="password"
               required
               minLength={6}
+              className="field"
+              style={{ minHeight: 44 }}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="At least 6 characters"
@@ -149,9 +167,14 @@ export default function AuthForm() {
             />
           </div>
         )}
-        {error && <p className="error">{error}</p>}
-        {message && <p className="success">{message}</p>}
-        <button type="submit" className="btn btn-gold" disabled={busy || !configured}>
+        {error && <p className="error" role="alert">{error}</p>}
+        {message && <p className="success" role="status">{message}</p>}
+        <button
+          type="submit"
+          className="btn btn-primary"
+          disabled={busy || !configured}
+          style={{ width: "100%" }}
+        >
           {busy
             ? "Please wait…"
             : mode === "signin"
@@ -165,7 +188,8 @@ export default function AuthForm() {
         <div className="rowbtns">
           <button
             type="button"
-            className="btn btn-line"
+            className="btn btn-secondary"
+            style={{ flex: "1 1 auto" }}
             onClick={() => switchMode("forgot")}
           >
             Forgot password?
@@ -176,14 +200,16 @@ export default function AuthForm() {
         <div className="rowbtns">
           <button
             type="button"
-            className="btn btn-line"
+            className="btn btn-secondary"
+            style={{ flex: "1 1 auto" }}
             onClick={() => switchMode("forgot")}
           >
             Reset password
           </button>
           <button
             type="button"
-            className="btn btn-line"
+            className="btn btn-secondary"
+            style={{ flex: "1 1 auto" }}
             onClick={() => switchMode("signin")}
           >
             Sign in instead
@@ -193,7 +219,8 @@ export default function AuthForm() {
       <div className="rowbtns">
         <button
           type="button"
-          className="btn btn-line"
+          className="btn btn-secondary"
+          style={{ flex: "1 1 auto" }}
           onClick={() =>
             switchMode(mode === "signin" ? "signup" : "signin")
           }

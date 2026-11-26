@@ -36,7 +36,7 @@ export default function ToastHost() {
   return (
     <div className="toast-host" aria-live="polite">
       {toasts.map((t) => (
-        <div key={t.id} className="toast" role="status">
+        <div key={t.id} className="toast toast-success" role="status">
           <span className="toast-check" aria-hidden="true">✓</span>
           {t.text}
         </div>

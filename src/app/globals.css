@@ -2,23 +2,77 @@
    Premium refresh: deeper warm near-black surfaces, richer gold with a
    warm gradient on headings, buttons and accents. */
 :root {
+  /* --- Surfaces (deep black / warm charcoal) --- */
   --bg: #0a0805;
   --bg-soft: #12100a;
   --surface: #1b1610;
   --surface-2: #2a2214;
+  --surface-raised: #241d10;
+  --overlay: rgba(6, 4, 2, 0.72);
+  /* --- Type --- */
   --ink: #f8f0da;
   --ink-2: #d6c69c;
+  --ink-muted: #a89878;
+  /* --- Borders --- */
   --line: #43351f;
   --line-soft: #33291a;
+  --line-gold: rgba(242, 201, 76, 0.45);
+  /* --- Brand gold / champagne --- */
   --gold: #f2c94c;
   --gold-2: #e0a92e;
+  --gold-light: #f8d97a;
   --gold-deep: #b07d10;
   --gold-gradient: linear-gradient(135deg, #f8d97a 0%, #f2c94c 45%, #dfa52a 100%);
   --gold-text: linear-gradient(120deg, #fbe28a 0%, #f2c94c 50%, #e8b23a 100%);
+  --on-gold: #241a02;
+  /* --- Status --- */
   --red: #c1272d;
   --green: #4cc983;
+  /* --- Typography scale --- */
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --fs-display: clamp(2.2rem, 7vw, 3.6rem);
+  --fs-h1: clamp(1.9rem, 5vw, 2.6rem);
+  --fs-h2: clamp(1.5rem, 4vw, 2rem);
+  --fs-h3: 1.05rem;
+  --fs-body: 1rem;
+  --fs-small: 0.85rem;
+  --fs-eyebrow: 0.72rem;
+  --lh-tight: 1.15;
+  --lh-heading: 1.2;
+  --lh-body: 1.55;
+  --ls-eyebrow: 0.14em;
+  /* --- Spacing scale --- */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 24px;
+  --space-xxl: 32px;
+  --space-section: 28px;
+  /* --- Radius scale --- */
+  --radius-sm: 8px;
+  --radius-md: 12px;
   --radius: 14px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --radius-pill: 999px;
+  /* --- Shadow scale --- */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 8px 22px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.55);
+  --shadow-gold: 0 6px 18px rgba(242, 201, 76, 0.25);
+  --shadow-gold-strong: 0 6px 30px rgba(242, 201, 76, 0.45);
+  /* --- Focus ring (gold) --- */
+  --focus-ring: 0 0 0 3px rgba(242, 201, 76, 0.22);
+  /* --- Motion --- */
+  --motion-fast: 0.12s ease;
+  --motion-base: 0.2s ease;
+  --motion-slow: 0.35s cubic-bezier(0.22, 0.8, 0.32, 1);
+  --ease-out: cubic-bezier(0.22, 0.8, 0.32, 1);
+  /* --- Layout --- */
   --sidebar-w: 264px;
+  --container-max: 1080px;
+  --tap-min: 44px;
 }
 
 * {
@@ -478,8 +532,13 @@ h2 {
 }
 .section {
   padding-top: 28px;
-  /* Anchor jumps land the section below any header. */
-  scroll-margin-top: 76px;
+  /* Anchor jumps land the section below any header. 84px keeps headings
+     clear of the 60px mobile top bar with room to spare. */
+  scroll-margin-top: 84px;
+}
+/* Any anchored element (e.g. #signin) gets the same clearance. */
+[id] {
+  scroll-margin-top: 84px;
 }
 
 /* Filters */
@@ -1413,3 +1472,584 @@ main > section:nth-child(4) { animation-delay: 0.08s; }
 
 /* Monologues chips use the Monologues teal. */
 .section[data-page="monologues"] .chip { --dept: #4dd8c4; --dept-soft: rgba(77, 216, 196, 0.16); }
+
+/* ============================================================
+   DESIGN SYSTEM — unified premium cinematic restyle.
+   Tokens live in :root above and in src/lib/theme.ts (DS).
+   These rules come last so they govern the shared classes every
+   page uses. No page file was touched; every class name the pages
+   use is still defined here.
+   ============================================================ */
+
+/* --- Typography base (token-driven) --- */
+body {
+  font-family: var(--font-sans);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+}
+h1 {
+  font-size: var(--fs-h1);
+  font-weight: 800;
+  line-height: var(--lh-tight);
+  letter-spacing: -0.01em;
+  margin: 0 0 8px;
+}
+h2 {
+  font-size: var(--fs-h2);
+  font-weight: 800;
+  line-height: var(--lh-heading);
+  letter-spacing: -0.005em;
+}
+h3 {
+  font-size: var(--fs-h3);
+  font-weight: 700;
+  line-height: 1.35;
+}
+small,
+.small {
+  font-size: var(--fs-small);
+  line-height: 1.5;
+}
+
+/* Eyebrow / label — small caps gold label above a heading. */
+.eyebrow {
+  display: block;
+  font-size: var(--fs-eyebrow);
+  font-weight: 800;
+  letter-spacing: var(--ls-eyebrow);
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: var(--space-sm);
+}
+
+/* --- Page head pattern (page agents: use this at the top of a page) ---
+   <div class="page-head">
+     <span class="eyebrow">Section label</span>
+     <h1>Page title</h1>
+     <span class="accent-bar" aria-hidden="true"></span>
+     <p>One-line description.</p>
+   </div>
+   The accent bar takes the page colour via --page-accent, like the
+   .section[data-page] rules above. */
+.page-head {
+  padding-top: var(--space-section);
+  margin-bottom: var(--space-xl);
+}
+.page-head h1,
+.page-head h2 {
+  margin: 0 0 var(--space-md);
+}
+.page-head .accent-bar {
+  display: block;
+  width: 54px;
+  height: 4px;
+  border-radius: var(--radius-pill);
+  background: var(--page-accent, var(--gold));
+  box-shadow: 0 0 14px var(--page-accent, var(--gold));
+  margin-bottom: var(--space-md);
+}
+.page-head p {
+  color: var(--ink-2);
+  margin: 0;
+  max-width: 640px;
+}
+
+/* --- Layout --- */
+.container {
+  max-width: var(--container-max);
+}
+
+/* --- Buttons (premium restyle; all existing variants kept) --- */
+.btn {
+  min-height: var(--tap-min);
+  border: 1.5px solid transparent;
+  border-radius: var(--radius-pill);
+  padding: 12px 22px;
+  box-shadow: var(--shadow-sm);
+}
+.btn-gold,
+.btn-primary {
+  background: var(--gold-gradient);
+  color: var(--on-gold);
+  box-shadow: var(--shadow-gold);
+}
+.btn-gold:hover:not(:disabled),
+.btn-primary:hover:not(:disabled) {
+  filter: brightness(1.08);
+  box-shadow: var(--shadow-gold-strong);
+}
+.btn-ghost,
+.btn-secondary {
+  background: rgba(242, 201, 76, 0.06);
+  color: var(--ink);
+  border-color: var(--line);
+  box-shadow: none;
+}
+.btn-ghost:hover:not(:disabled),
+.btn-secondary:hover:not(:disabled) {
+  border-color: var(--line-gold);
+  background: rgba(242, 201, 76, 0.1);
+}
+.btn-dark {
+  background: var(--ink);
+  color: var(--bg);
+  box-shadow: var(--shadow-sm);
+}
+.btn-line {
+  background: var(--surface);
+  color: var(--ink);
+  border-color: var(--line);
+  box-shadow: none;
+}
+.btn-line:hover:not(:disabled) {
+  border-color: var(--line-gold);
+}
+.btn-red,
+.btn-danger {
+  background: linear-gradient(135deg, #d93a40 0%, var(--red) 60%, #a01e24 100%);
+  color: #fff;
+  box-shadow: 0 6px 18px rgba(193, 39, 45, 0.3);
+}
+/* Icon-only button: square, 44px, gold on hover. */
+.btn-icon {
+  width: var(--tap-min);
+  min-width: var(--tap-min);
+  height: var(--tap-min);
+  padding: 0;
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--ink);
+  border: 1.5px solid var(--line);
+}
+.btn-icon:hover:not(:disabled) {
+  border-color: var(--line-gold);
+  color: var(--gold);
+}
+.btn:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+/* --- Cards (premium restyle; existing .card kept, variants added) --- */
+.card {
+  background: linear-gradient(180deg, var(--surface) 0%, var(--bg-soft) 100%);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
+/* Tinted card: soft wash of the section colour via --card-accent. */
+.card-accent {
+  border-top: 2px solid var(--card-accent, var(--gold));
+  background: linear-gradient(
+    180deg,
+    var(--card-soft, rgba(242, 201, 76, 0.1)),
+    var(--surface) 65%
+  );
+}
+/* Gold-outlined card (featured / earned states). */
+.card-gold {
+  border-color: var(--line-gold);
+  box-shadow: var(--shadow-md), 0 0 26px rgba(242, 201, 76, 0.14);
+}
+/* Flat card: no shadow, for dense lists. */
+.card-flat {
+  background: var(--surface);
+  box-shadow: none;
+}
+
+/* --- Forms: dark fields, gold focus ring --- */
+.form input,
+.form textarea,
+.form select,
+.field {
+  width: 100%;
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--bg-soft);
+  color: var(--ink);
+  padding: 10px 12px;
+  transition: border-color var(--motion-base), box-shadow var(--motion-base);
+}
+.form input::placeholder,
+.form textarea::placeholder,
+.field::placeholder {
+  color: var(--ink-muted);
+}
+.form input:focus,
+.form textarea:focus,
+.form select:focus,
+.field:focus {
+  border-color: var(--gold);
+  box-shadow: var(--focus-ring);
+  outline: none;
+}
+.form input:disabled,
+.form textarea:disabled,
+.form select:disabled,
+.field:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+/* Selects stay dark-themed (dropdown list included). */
+.form select,
+select.field {
+  color-scheme: dark;
+  cursor: pointer;
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--gold) 50%),
+    linear-gradient(135deg, var(--gold) 50%, transparent 50%);
+  background-position: calc(100% - 18px) 50%, calc(100% - 13px) 50%;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+  padding-right: 34px;
+}
+.form select option,
+select.field option {
+  background: var(--bg-soft);
+  color: var(--ink);
+}
+/* Checkboxes / radios / range inputs take the gold accent. */
+input[type="checkbox"],
+input[type="radio"] {
+  accent-color: var(--gold);
+  min-height: 20px;
+  width: 20px;
+}
+input[type="range"] {
+  accent-color: var(--gold);
+}
+/* Field label + hint helpers for page agents. */
+.field-label {
+  font-size: var(--fs-small);
+  font-weight: 700;
+  color: var(--ink-2);
+  display: block;
+  margin-bottom: 4px;
+}
+.field-hint {
+  font-size: var(--fs-small);
+  color: var(--ink-muted);
+  margin-top: 4px;
+}
+
+/* --- Tabs (generic; .source-tabs/.source-tab keep working as before) --- */
+.tabs {
+  display: flex;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-lg);
+  border-bottom: 1px solid var(--line-soft);
+  padding-bottom: var(--space-sm);
+}
+.tab {
+  min-height: var(--tap-min);
+  border: 1.5px solid var(--line);
+  background: var(--surface);
+  color: var(--ink-2);
+  border-radius: var(--radius-pill);
+  padding: 8px 16px;
+  font-weight: 700;
+  font-size: var(--fs-small);
+  cursor: pointer;
+  transition: background var(--motion-base), color var(--motion-base),
+    border-color var(--motion-base), box-shadow var(--motion-base);
+}
+.tab:hover {
+  color: var(--ink);
+  border-color: var(--line-gold);
+}
+.tab[aria-selected="true"],
+.tab.active {
+  background: var(--gold-gradient);
+  border-color: var(--gold);
+  color: var(--on-gold);
+  box-shadow: var(--shadow-gold);
+}
+
+/* --- Progress bars (generic alias; .prog / .progress-row keep working) --- */
+.progress {
+  height: 10px;
+  background: var(--surface-2);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+}
+.progress > i,
+.progress-bar {
+  display: block;
+  height: 100%;
+  background: var(--gold-gradient);
+  border-radius: var(--radius-pill);
+  transition: width 0.5s ease;
+}
+
+/* --- Badges / chips (premium restyle; .chip kept) --- */
+.chip {
+  border: 1px solid transparent;
+  box-shadow: var(--shadow-sm);
+}
+.chip-accent {
+  background: var(--chip-soft, rgba(242, 201, 76, 0.16));
+  color: var(--chip, var(--gold));
+}
+.chip-outline {
+  background: transparent;
+  border-color: var(--line-gold);
+  color: var(--gold);
+}
+.badge-soft {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  border-radius: var(--radius-pill);
+  padding: 3px 9px;
+  background: rgba(242, 201, 76, 0.16);
+  color: var(--gold);
+}
+
+/* --- Modal / dialog (new; no page uses one yet) --- */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: var(--overlay);
+  backdrop-filter: blur(4px);
+  animation: pageIn 0.2s var(--ease-out) both;
+}
+.modal,
+dialog.modal {
+  width: min(92vw, 520px);
+  max-height: 88dvh;
+  overflow-y: auto;
+  background: linear-gradient(180deg, var(--surface-raised) 0%, var(--bg-soft) 100%);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xl);
+  padding: 22px;
+  box-shadow: var(--shadow-lg);
+  color: var(--ink);
+  animation: cardIn 0.25s var(--ease-out) both;
+}
+dialog.modal {
+  padding: 22px;
+}
+dialog.modal::backdrop {
+  background: var(--overlay);
+}
+.modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.modal-title {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 800;
+}
+.modal-body {
+  color: var(--ink-2);
+  font-size: 0.95rem;
+}
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+
+/* --- Toasts (premium restyle; .toast/.toast-host kept) --- */
+.toast {
+  background: var(--surface-raised);
+  border: 1px solid var(--line-gold);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+}
+.toast-error {
+  border-color: rgba(193, 39, 45, 0.6);
+}
+.toast-error .toast-check {
+  background: var(--red);
+  color: #fff;
+}
+.toast-success .toast-check {
+  background: var(--gold-gradient);
+  color: var(--on-gold);
+}
+
+/* --- Tables (new; no page uses one yet) --- */
+.table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+table.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+  color: var(--ink);
+}
+.table th,
+.table td {
+  text-align: left;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line-soft);
+}
+.table th {
+  font-size: var(--fs-eyebrow);
+  font-weight: 800;
+  letter-spacing: var(--ls-eyebrow);
+  text-transform: uppercase;
+  color: var(--gold);
+  background: var(--bg-soft);
+}
+.table tr:last-child td {
+  border-bottom: 0;
+}
+.table tbody tr:hover {
+  background: rgba(242, 201, 76, 0.05);
+}
+
+/* --- Footer (minimal restyle; text unchanged) --- */
+footer,
+.site-footer {
+  border-top: 1px solid var(--line);
+  padding: 26px 16px 40px;
+  text-align: center;
+  color: var(--ink-2);
+  font-size: 0.88rem;
+  background: linear-gradient(180deg, transparent 0%, rgba(242, 201, 76, 0.03) 100%);
+}
+.site-footer::before {
+  content: "";
+  display: block;
+  width: 54px;
+  height: 3px;
+  margin: 0 auto 16px;
+  border-radius: var(--radius-pill);
+  background: var(--gold-gradient);
+}
+
+/* --- Focus ring token everywhere --- */
+:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* ============================================================
+   APP SHELL — premium sidebar + top bar.
+   Mobile top bar stays position:static (never fixed): it scrolls
+   away with the page, so a heading can never slide under it.
+   ============================================================ */
+.sidebar {
+  background:
+    radial-gradient(220px 160px at 50% 0%, rgba(242, 201, 76, 0.09), transparent 70%),
+    linear-gradient(180deg, #171208 0%, #100d07 55%, #0c0a05 100%);
+  border-right: 1px solid var(--line-soft);
+  box-shadow: 24px 0 48px rgba(0, 0, 0, 0.35);
+}
+.sidebar-head {
+  padding: 22px 20px 16px;
+  border-bottom: 1px solid var(--line-soft);
+}
+/* Wordmark: gold gradient + a hairline gold rule beneath it. */
+.sidebar-head .brand,
+.topbar .brand {
+  font-weight: 800;
+  letter-spacing: 0.3em;
+  text-shadow: 0 0 24px rgba(242, 201, 76, 0.25);
+}
+.sidebar-nav {
+  padding: 16px 12px;
+  gap: 3px;
+}
+.sidebar-link {
+  min-height: 46px;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+}
+/* Icon sits in a soft tinted tile; the tile turns gold on active. */
+.sidebar-link .sidebar-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  border-radius: 10px;
+  background: rgba(248, 240, 218, 0.05);
+  border: 1px solid transparent;
+}
+.sidebar-link .sidebar-icon svg {
+  width: 20px;
+  height: 20px;
+}
+.sidebar-link:hover {
+  background: var(--surface-2);
+  transform: translateX(2px);
+}
+.sidebar-link.active {
+  background: linear-gradient(
+    90deg,
+    var(--nav-soft, rgba(242, 201, 76, 0.22)),
+    rgba(242, 201, 76, 0.06)
+  );
+  border-color: var(--nav-accent, rgba(242, 201, 76, 0.35));
+  color: var(--nav-accent, var(--gold));
+  box-shadow: inset 3px 0 0 var(--nav-accent, var(--gold)),
+    0 4px 16px rgba(0, 0, 0, 0.3);
+}
+.sidebar-link.active .sidebar-icon {
+  background: var(--nav-soft, rgba(242, 201, 76, 0.18));
+  border-color: var(--nav-accent, rgba(242, 201, 76, 0.35));
+  color: var(--nav-accent, var(--gold));
+}
+.sidebar-divider {
+  margin: 14px 8px;
+  background: linear-gradient(90deg, transparent, var(--line) 20%, var(--line) 80%, transparent);
+}
+.sidebar-foot {
+  padding: 16px 12px 20px;
+}
+/* Sign out: quiet ghost. Sign in: gold, so the one action that
+   matters on a signed-out sidebar stands out. */
+.sidebar-signout {
+  min-height: 48px;
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+.sidebar-signout:hover {
+  border-color: var(--line-gold);
+}
+.sidebar-signout--primary {
+  background: var(--gold-gradient);
+  border-color: var(--gold);
+  color: var(--on-gold);
+  box-shadow: var(--shadow-gold);
+}
+.sidebar-signout--primary:hover {
+  background: var(--gold-gradient);
+  filter: brightness(1.08);
+}
+.sidebar-signout--primary .sidebar-icon {
+  background: rgba(36, 26, 2, 0.14);
+  color: var(--on-gold);
+}
+.topbar {
+  position: static;
+  background: rgba(16, 13, 7, 0.94);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+.hamburger:hover {
+  background: rgba(242, 201, 76, 0.1);
+}

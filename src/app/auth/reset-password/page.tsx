@@ -46,20 +46,25 @@ export default function ResetPasswordPage() {
 
   return (
     <section className="section" style={{ maxWidth: 560, margin: "0 auto" }}>
-      <h2>Set a new password</h2>
-      <p className="sub">
-        You came here from your password reset email. Choose a new password
-        below.
-      </p>
-      <div className="card">
+      <div className="page-head" style={{ paddingTop: 0 }}>
+        <h2>Set a new password</h2>
+        <span className="accent-bar" aria-hidden="true" />
+        <p className="sub">
+          You came here from your password reset email. Choose a new password
+          below.
+        </p>
+      </div>
+      <div className="card card-accent">
         <form className="form" onSubmit={handleSubmit}>
           <div>
-            <label htmlFor="new-password">New password</label>
+            <label htmlFor="new-password" className="field-label">New password</label>
             <input
               id="new-password"
               type="password"
               required
               minLength={6}
+              className="field"
+              style={{ minHeight: 44 }}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="At least 6 characters"
@@ -67,27 +72,34 @@ export default function ResetPasswordPage() {
             />
           </div>
           <div>
-            <label htmlFor="confirm-password">Type it again</label>
+            <label htmlFor="confirm-password" className="field-label">Type it again</label>
             <input
               id="confirm-password"
               type="password"
               required
               minLength={6}
+              className="field"
+              style={{ minHeight: 44 }}
               value={confirm}
               onChange={(e) => setConfirm(e.target.value)}
               placeholder="Repeat the new password"
               autoComplete="new-password"
             />
           </div>
-          {error && <p className="error">{error}</p>}
-          {message && <p className="success">{message}</p>}
-          <button type="submit" className="btn btn-gold" disabled={busy || !configured}>
+          {error && <p className="error" role="alert">{error}</p>}
+          {message && <p className="success" role="status">{message}</p>}
+          <button
+            type="submit"
+            className="btn btn-primary"
+            disabled={busy || !configured}
+            style={{ width: "100%" }}
+          >
             {busy ? "Please wait…" : "Save new password"}
           </button>
         </form>
         {message && (
           <div className="rowbtns">
-            <Link href="/" className="btn btn-line">
+            <Link href="/" className="btn btn-secondary" style={{ flex: "1 1 auto" }}>
               Go to Dashboard
             </Link>
           </div>

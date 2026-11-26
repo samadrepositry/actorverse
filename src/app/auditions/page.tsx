@@ -6,6 +6,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import type { CSSProperties } from "react";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase";
 import {
   applyToAudition,
@@ -149,11 +150,15 @@ export default function AuditionsPage() {
 
   return (
     <section className="section" data-page="auditions">
-      <h2>Audition Center</h2>
-      <p className="sub">
-        Find auditions, or post one of your own. Apply with a short message.
-        One application per audition.
-      </p>
+      <div className="page-head" style={{ paddingTop: 0 }}>
+        <span className="eyebrow">Casting</span>
+        <h1>Audition Center</h1>
+        <span className="accent-bar" aria-hidden="true" />
+        <p>
+          Find auditions, or post one of your own. Apply with a short message.
+          One application per audition.
+        </p>
+      </div>
 
       {signedIn === false && (
         <p className="note">
@@ -163,13 +168,23 @@ export default function AuditionsPage() {
 
       {signedIn === true && (
         <>
-          <div className="card" style={{ marginBottom: 14 }}>
+          <div
+            className="card card-accent"
+            style={
+              {
+                "--card-accent": "#ff8f6b",
+                "--card-soft": "rgba(255, 143, 107, 0.10)",
+                marginBottom: 14,
+              } as CSSProperties
+            }
+          >
             <h3 style={{ marginTop: 0 }}>Post an audition</h3>
             <div className="form">
               <div>
-                <label htmlFor="aud-title">Title</label>
+                <label htmlFor="aud-title" className="field-label">Title</label>
                 <input
                   id="aud-title"
+                  className="field"
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
@@ -177,9 +192,10 @@ export default function AuditionsPage() {
                 />
               </div>
               <div>
-                <label htmlFor="aud-role">Role description</label>
+                <label htmlFor="aud-role" className="field-label">Role description</label>
                 <textarea
                   id="aud-role"
+                  className="field"
                   rows={3}
                   value={roleDescription}
                   onChange={(e) => setRoleDescription(e.target.value)}
@@ -187,9 +203,10 @@ export default function AuditionsPage() {
                 />
               </div>
               <div>
-                <label htmlFor="aud-location">Location</label>
+                <label htmlFor="aud-location" className="field-label">Location</label>
                 <input
                   id="aud-location"
+                  className="field"
                   type="text"
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
@@ -197,9 +214,10 @@ export default function AuditionsPage() {
                 />
               </div>
               <div>
-                <label htmlFor="aud-deadline">Deadline (optional)</label>
+                <label htmlFor="aud-deadline" className="field-label">Deadline (optional)</label>
                 <input
                   id="aud-deadline"
+                  className="field"
                   type="date"
                   value={deadline}
                   onChange={(e) => setDeadline(e.target.value)}
@@ -222,7 +240,7 @@ export default function AuditionsPage() {
             </div>
           </div>
 
-          <div className="card" style={{ marginBottom: 14 }}>
+          <div className="card card-flat" style={{ marginBottom: 14 }}>
             <h3 style={{ marginTop: 0 }}>Open auditions</h3>
             {auditions.length === 0 && (
               <p className="empty">
@@ -232,13 +250,24 @@ export default function AuditionsPage() {
             {auditions.length > 0 && (
               <ul className="session-list">
                 {auditions.map((aud) => (
-                  <li key={aud.id} style={{ display: "block" }}>
+                  <li
+                    key={aud.id}
+                    style={{
+                      display: "block",
+                      background: "var(--surface)",
+                      border: "1px solid var(--line)",
+                      borderRadius: 14,
+                      padding: 16,
+                      marginBottom: 12,
+                    }}
+                  >
                     <div
                       style={{
                         display: "flex",
                         justifyContent: "space-between",
                         gap: 12,
                         alignItems: "baseline",
+                        flexWrap: "wrap",
                       }}
                     >
                       <strong>{aud.title}</strong>
@@ -254,11 +283,15 @@ export default function AuditionsPage() {
                     </p>
                     {applyingId === aud.id ? (
                       <div className="form" style={{ marginTop: 10 }}>
-                        <label htmlFor={`apply-${aud.id}`}>
+                        <label
+                          htmlFor={`apply-${aud.id}`}
+                          className="field-label"
+                        >
                           Your message to the caster
                         </label>
                         <textarea
                           id={`apply-${aud.id}`}
+                          className="field"
                           rows={3}
                           maxLength={500}
                           value={applyMessage}
@@ -353,7 +386,7 @@ export default function AuditionsPage() {
             )}
           </div>
 
-          <div className="card">
+          <div className="card card-flat">
             <h3 style={{ marginTop: 0 }}>My applications</h3>
             {myApplications.length === 0 && (
               <p className="sub">You have not applied to any audition yet.</p>

@@ -27,12 +27,17 @@ export default function ExercisesPage() {
 
   return (
     <section className="section" data-page="exercises">
-      <h2>Exercise Library</h2>
-      <p className="sub">
-        {EXERCISES.length} exercises across {DEPARTMENTS.length} departments.
-        Tap a department to filter. Every exercise runs with the built-in
-        timer: 1. Pick a time 2. Press Start 3. It saves by itself.
-      </p>
+      <div className="page-head">
+        <span className="eyebrow">Practice Library</span>
+        <h1>Exercise Library</h1>
+        <span className="accent-bar" aria-hidden="true"></span>
+        <p>
+          {EXERCISES.length} exercises across {DEPARTMENTS.length}{" "}
+          departments. Tap a department to filter. Every exercise runs with
+          the built-in timer: 1. Pick a time 2. Press Start 3. It saves by
+          itself.
+        </p>
+      </div>
       <div className="filters" role="group" aria-label="Filter by department">
         {(["All", ...DEPARTMENTS] as Filter[]).map((d) => (
           <button
@@ -46,8 +51,9 @@ export default function ExercisesPage() {
                 ? ({
                     "--dept": DEPT_ACCENTS[d as Department].color,
                     "--dept-soft": DEPT_ACCENTS[d as Department].soft,
+                    minHeight: 44,
                   } as CSSProperties)
-                : undefined
+                : ({ minHeight: 44 } as CSSProperties)
             }
           >
             {d}
@@ -60,7 +66,16 @@ export default function ExercisesPage() {
       </p>
       <div className="grid">
         {list.map((ex) => (
-          <article key={ex.id} className="card">
+          <article
+            key={ex.id}
+            className="card card-accent"
+            style={
+              {
+                "--card-accent": DEPT_ACCENTS[ex.department].color,
+                "--card-soft": DEPT_ACCENTS[ex.department].soft,
+              } as CSSProperties
+            }
+          >
             <span
               className="chip"
               style={
@@ -81,7 +96,7 @@ export default function ExercisesPage() {
             <div className="rowbtns">
               <button
                 type="button"
-                className="btn btn-line"
+                className="btn btn-primary"
                 onClick={() => startWithTimer(ex.id)}
               >
                 Start with timer

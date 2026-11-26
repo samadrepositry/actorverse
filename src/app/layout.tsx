@@ -39,7 +39,7 @@ export default async function RootLayout({
         <ToastHost />
         <div className="app-shell">
           <main className="container">{children}</main>
-          <footer>
+          <footer className="site-footer">
             ACTORVERSE — Train Like an Athlete. Perform Like a Legend.
           </footer>
         </div>

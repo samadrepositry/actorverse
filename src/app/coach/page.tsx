@@ -6,6 +6,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import type { CSSProperties } from "react";
 
 interface ChatMsg {
   role: "user" | "coach";
@@ -170,11 +171,15 @@ export default function CoachPage() {
 
   return (
     <section className="section" data-page="coach">
-      <h2>AI Coach</h2>
-      <p className="sub">
-        Ask your acting coach anything — voice, body, camera, auditions.
-        Simple answers, one practical exercise at a time.
-      </p>
+      <div className="page-head" style={{ paddingTop: 0 }}>
+        <span className="eyebrow">Mentorship</span>
+        <h1>AI Coach</h1>
+        <span className="accent-bar" aria-hidden="true" />
+        <p>
+          Ask your acting coach anything — voice, body, camera, auditions.
+          Simple answers, one practical exercise at a time.
+        </p>
+      </div>
 
       {notConnected && (
         <p className="note">
@@ -184,11 +189,17 @@ export default function CoachPage() {
         </p>
       )}
 
-      <div className="rowbtns" style={{ marginTop: 0, marginBottom: 12 }}>
+      <div
+        className="tabs"
+        role="group"
+        aria-label="Coach language"
+        style={{ marginTop: 0, marginBottom: 12 }}
+      >
         <button
           type="button"
-          className="fbtn"
+          className="fbtn tab"
           aria-pressed={language === "en"}
+          aria-selected={language === "en"}
           disabled={translating || busy}
           onClick={() => void switchLanguage("en")}
         >
@@ -196,8 +207,9 @@ export default function CoachPage() {
         </button>
         <button
           type="button"
-          className="fbtn"
+          className="fbtn tab"
           aria-pressed={language === "ur"}
+          aria-selected={language === "ur"}
           disabled={translating || busy}
           onClick={() => void switchLanguage("ur")}
         >
@@ -205,8 +217,9 @@ export default function CoachPage() {
         </button>
         <button
           type="button"
-          className="fbtn"
+          className="fbtn tab"
           aria-pressed={language === "es"}
+          aria-selected={language === "es"}
           disabled={translating || busy}
           onClick={() => void switchLanguage("es")}
         >
@@ -225,15 +238,30 @@ export default function CoachPage() {
         </p>
       )}
 
-      <div className="card">
+      <div
+        className="card card-accent"
+        style={
+          {
+            "--card-accent": "#ff9a5c",
+            "--card-soft": "rgba(255, 154, 92, 0.10)",
+          } as CSSProperties
+        }
+      >
         <div className="chat-log" ref={listRef}>
           {messages.length === 0 && (
-            <p className="sub">{UI_STRINGS[language].empty}</p>
+            <p className="sub" style={{ marginBottom: 0 }}>
+              {UI_STRINGS[language].empty}
+            </p>
           )}
           {messages.map((m, i) => (
             <div
               key={i}
               className={`chat-msg ${m.role === "user" ? "chat-user" : "chat-coach"}`}
+              style={
+                m.role === "coach"
+                  ? { borderLeft: "3px solid var(--gold)" }
+                  : undefined
+              }
             >
               <strong>{m.role === "user" ? "You" : "Coach"}</strong>
               {m.role === "coach" ? (
@@ -244,18 +272,19 @@ export default function CoachPage() {
             </div>
           ))}
           {busy && (
-            <p className="sub">
+            <p className="sub" style={{ marginBottom: 0 }}>
               <span className="spinner spinner-light" aria-hidden="true" />{" "}
               Coach is thinking…
             </p>
           )}
         </div>
         <div className="form" style={{ marginTop: 12 }}>
-          <label htmlFor="coach-input">
+          <label htmlFor="coach-input" className="field-label">
             {UI_STRINGS[language].label}
           </label>
           <textarea
             id="coach-input"
+            className="field"
             rows={3}
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -289,7 +318,7 @@ export default function CoachPage() {
         )}
       </div>
 
-      <div className="card" style={{ marginTop: 14 }}>
+      <div className="card card-flat" style={{ marginTop: 14 }}>
         <h3 style={{ marginTop: 0 }}>Try one of these</h3>
         <div className="rowbtns" style={{ marginTop: 0 }}>
           {STARTERS.map((s) => (

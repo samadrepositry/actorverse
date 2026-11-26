@@ -51,20 +51,28 @@ export default function GoalSetter({
   return (
     <form className="form" onSubmit={handleSave}>
       <div>
-        <label htmlFor="weekly-goal">Weekly goal (minutes per week)</label>
+        <label htmlFor="weekly-goal" className="field-label">Weekly goal (minutes per week)</label>
         <input
           id="weekly-goal"
           type="number"
           min={0}
           max={10080}
           step={5}
+          inputMode="numeric"
+          className="field"
+          style={{ minHeight: 44 }}
           value={minutes}
           onChange={(e) => setMinutes(e.target.value)}
         />
       </div>
-      {error && <p className="error">{error}</p>}
-      {message && <p className="success">{message}</p>}
-      <button type="submit" className="btn btn-gold" disabled={busy}>
+      {error && <p className="error" role="alert">{error}</p>}
+      {message && <p className="success" role="status">{message}</p>}
+      <button
+        type="submit"
+        className="btn btn-primary"
+        disabled={busy}
+        style={{ width: "100%" }}
+      >
         {busy ? "Saving…" : "Save goal"}
       </button>
     </form>

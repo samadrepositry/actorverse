@@ -208,7 +208,7 @@ export default function Sidebar({ signedIn }: { signedIn: boolean }) {
           ) : (
             <Link
               href="/#signin"
-              className="sidebar-signout"
+              className="sidebar-signout sidebar-signout--primary"
               onClick={() => setOpen(false)}
             >
               <span className="sidebar-icon" aria-hidden="true">

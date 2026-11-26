@@ -670,11 +670,14 @@ function TeleprompterPageInner() {
 
   return (
     <section className="section" data-page="teleprompter">
-      <h2>Teleprompter</h2>
-      <p className="sub">
-        Read your script while the camera records. One tap starts the camera
-        and the scroll together.
-      </p>
+      <div className="page-head">
+        <h1>Teleprompter</h1>
+        <span className="accent-bar" aria-hidden="true" />
+        <p>
+          Read your script while the camera records. One tap starts the
+          camera and the scroll together.
+        </p>
+      </div>
 
       <p className="step-strip">
         <span><b>1</b> Pick a script</span>
@@ -682,12 +685,12 @@ function TeleprompterPageInner() {
         <span><b>3</b> Press RECORD</span>
       </p>
 
-      <div className="card" style={{ marginBottom: 14 }}>
+      <div className="card card-accent" style={{ marginBottom: 14 }}>
         <h3 style={{ marginTop: 0 }}>1. Pick a script</h3>
-        <div className="source-tabs" role="group" aria-label="Script source">
+        <div className="tabs" role="group" aria-label="Script source">
           <button
             type="button"
-            className="source-tab"
+            className={source === "paste" ? "tab active" : "tab"}
             aria-pressed={source === "paste"}
             onClick={() => {
               setSource("paste");
@@ -700,7 +703,7 @@ function TeleprompterPageInner() {
           </button>
           <button
             type="button"
-            className="source-tab"
+            className={source === "pdfs" ? "tab active" : "tab"}
             aria-pressed={source === "pdfs"}
             onClick={() => {
               setSource("pdfs");
@@ -711,7 +714,7 @@ function TeleprompterPageInner() {
           </button>
           <button
             type="button"
-            className="source-tab"
+            className={source === "scan" ? "tab active" : "tab"}
             aria-pressed={source === "scan"}
             onClick={() => setSource("scan")}
           >
@@ -719,7 +722,7 @@ function TeleprompterPageInner() {
           </button>
           <button
             type="button"
-            className="source-tab"
+            className={source === "monologues" ? "tab active" : "tab"}
             aria-pressed={source === "monologues"}
             onClick={() => setSource("monologues")}
           >
@@ -804,7 +807,7 @@ function TeleprompterPageInner() {
                 style={{ display: "none" }}
                 onChange={(e) => void handleScanFile(e.target.files?.[0])}
               />
-              <label className="btn btn-line" htmlFor="scan-upload">
+              <label className="btn btn-secondary" htmlFor="scan-upload">
                 Upload an image
               </label>
               <input
@@ -837,7 +840,7 @@ function TeleprompterPageInner() {
                   </button>
                   <button
                     type="button"
-                    className="btn btn-line"
+                    className="btn btn-secondary"
                     disabled={scanBusy}
                     onClick={() => void handlePhoneScan()}
                   >
@@ -914,7 +917,7 @@ function TeleprompterPageInner() {
         )}
       </div>
 
-      <div className="card" style={{ marginBottom: 14 }}>
+      <div className="card card-accent" style={{ marginBottom: 14 }}>
         <h3 style={{ marginTop: 0 }}>2. Camera and shot</h3>
         <div className="shot-row" role="group" aria-label="Shot size">
           {SHOTS.map((s) => (
@@ -1017,7 +1020,7 @@ function TeleprompterPageInner() {
             while you perform
           </label>
           <div className="rowbtns" style={{ marginTop: 0 }}>
-            <label className="btn btn-line" htmlFor="picture-file">
+            <label className="btn btn-secondary" htmlFor="picture-file">
               Choose a picture
             </label>
             <input
@@ -1030,7 +1033,7 @@ function TeleprompterPageInner() {
             {picture && (
               <button
                 type="button"
-                className="btn btn-line"
+                className="btn btn-secondary"
                 onClick={() => setPicture(null)}
               >
                 Remove picture
@@ -1046,7 +1049,7 @@ function TeleprompterPageInner() {
         )}
       </div>
 
-      <div className="card" style={{ marginBottom: 14 }}>
+      <div className="card card-accent" style={{ marginBottom: 14 }}>
         <h3 style={{ marginTop: 0 }}>3. Script</h3>
         <div className="slider-row">
           <label htmlFor="speed">
@@ -1065,14 +1068,14 @@ function TeleprompterPageInner() {
         <div className="rowbtns" style={{ marginTop: 4 }}>
           <button
             type="button"
-            className="btn btn-line"
+            className="btn btn-secondary"
             onClick={() => setFontSize((f) => Math.max(20, f - 4))}
           >
             A− Smaller text
           </button>
           <button
             type="button"
-            className="btn btn-line"
+            className="btn btn-secondary"
             onClick={() => setFontSize((f) => Math.min(44, f + 4))}
           >
             A+ Bigger text
@@ -1113,7 +1116,7 @@ function TeleprompterPageInner() {
       )}
 
       {lastTake && takeUrl && (
-        <div className="card" style={{ marginTop: 16 }}>
+        <div className="card card-gold" style={{ marginTop: 16 }}>
           <h3 style={{ marginTop: 0 }}>Your take — {formatClock(lastTake.durationSeconds)}</h3>
           <video
             className="take-video"
@@ -1135,14 +1138,14 @@ function TeleprompterPageInner() {
           <div className="rowbtns">
             <button
               type="button"
-              className="btn btn-dark"
+              className="btn btn-primary"
               onClick={handleSaveToPhone}
             >
               Save to phone
             </button>
             <button
               type="button"
-              className="btn btn-line"
+              className="btn btn-secondary"
               onClick={() => void handleDeleteTake()}
             >
               Delete
@@ -1166,7 +1169,7 @@ function TeleprompterPageInner() {
           {saveState === "failed" && lastTake && !lastTake.tooLarge && (
             <button
               type="button"
-              className="btn btn-line"
+              className="btn btn-secondary"
               disabled={saving}
               onClick={() => void retrySaveOnline()}
               style={{ marginTop: 8 }}

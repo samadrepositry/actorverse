@@ -69,24 +69,46 @@ function minutesPerDay(sessions: SessionRow[], days: number): { label: string; m
 function BarChart({
   title,
   data,
+  accent = "var(--gold-gradient)",
+  compact = false,
 }: {
   title: string;
   data: { label: string; minutes: number }[];
+  accent?: string;
+  compact?: boolean;
 }) {
   const max = Math.max(1, ...data.map((d) => d.minutes));
   return (
-    <div className="card">
+    <div
+      className="card card-accent"
+      style={
+        {
+          "--card-accent": "#8fa8ff",
+          "--card-soft": "rgba(143, 168, 255, 0.10)",
+        } as CSSProperties
+      }
+    >
       <h3>{title}</h3>
-      <div className="bar-row" role="img" aria-label={`${title}: ${data.map((d) => `${d.label} ${d.minutes} min`).join(", ")}`}>
+      <div
+        className="bar-row"
+        style={compact ? { gap: 2 } : undefined}
+        role="img"
+        aria-label={`${title}: ${data.map((d) => `${d.label} ${d.minutes} min`).join(", ")}`}
+      >
         {data.map((d, i) => (
           <div key={i} className="bar-col">
             <div
               className="bar"
-              style={{ height: `${Math.max(3, (d.minutes / max) * 96)}px` }}
+              style={{
+                height: `${Math.max(3, (d.minutes / max) * 96)}px`,
+                background: accent,
+              }}
               title={`${d.label}: ${d.minutes} min`}
             />
-            <span>{d.minutes}m</span>
-            <span>{d.label}</span>
+            {/* In the 30-day chart only every 5th label is shown, so the
+                columns stay clean and readable on phones. */}
+            <span>{!compact || i % 5 === 0 ? `${d.minutes}m` : ""}</span>
+            <span>{!compact || i % 5 === 0 ? d.label : ""}</span>
           </div>
         ))}
       </div>
@@ -98,8 +120,12 @@ export default async function AnalyticsPage() {
   if (!isSupabaseConfigured()) {
     return (
       <section className="section" data-page="analytics">
-        <h2>Analytics</h2>
-        <p className="sub">Your practice, in numbers.</p>
+        <div className="page-head">
+          <span className="eyebrow">Progress</span>
+          <h1>Analytics</h1>
+          <span className="accent-bar" aria-hidden="true" />
+          <p>Your practice, in numbers.</p>
+        </div>
         <div className="note">
           Supabase is not set up yet. Add the Supabase URL and anon key to{" "}
           <code>.env.local</code> (see <code>.env.example</code>), then sign in
@@ -117,11 +143,15 @@ export default async function AnalyticsPage() {
   if (!user) {
     return (
       <section className="section" data-page="analytics">
-        <h2>Analytics</h2>
-        <p className="sub">
-          Sign in to see your practice minutes, streak, weekly goal and
-          progress by department.
-        </p>
+        <div className="page-head">
+          <span className="eyebrow">Progress</span>
+          <h1>Analytics</h1>
+          <span className="accent-bar" aria-hidden="true" />
+          <p>
+            Sign in to see your practice minutes, streak, weekly goal and
+            progress by department.
+          </p>
+        </div>
         <div className="rowbtns">
           <Link href="/#signin" className="btn btn-gold">
             Sign in
@@ -160,23 +190,59 @@ export default async function AnalyticsPage() {
 
   return (
     <section className="section" data-page="analytics">
-      <h2>Analytics</h2>
-      <p className="sub">Your practice, in numbers.</p>
+      <div className="page-head">
+        <span className="eyebrow">Progress</span>
+        <h1>Analytics</h1>
+        <span className="accent-bar" aria-hidden="true" />
+        <p>Your practice, in numbers.</p>
+      </div>
 
       <div className="hero-stats" style={{ justifyContent: "flex-start" }}>
-        <div className="hstat">
+        <div
+          className="hstat"
+          style={
+            {
+              "--hstat-accent": "#8fa8ff",
+              "--hstat-soft": "rgba(143, 168, 255, 0.12)",
+            } as CSSProperties
+          }
+        >
           <b>{totalMinutes}</b>
           <span>Total minutes</span>
         </div>
-        <div className="hstat">
+        <div
+          className="hstat"
+          style={
+            {
+              "--hstat-accent": "#8fa8ff",
+              "--hstat-soft": "rgba(143, 168, 255, 0.12)",
+            } as CSSProperties
+          }
+        >
           <b>{streak}</b>
           <span>Day streak</span>
         </div>
-        <div className="hstat">
+        <div
+          className="hstat"
+          style={
+            {
+              "--hstat-accent": "#8fa8ff",
+              "--hstat-soft": "rgba(143, 168, 255, 0.12)",
+            } as CSSProperties
+          }
+        >
           <b>{sessions.length}</b>
           <span>Sessions</span>
         </div>
-        <div className="hstat">
+        <div
+          className="hstat"
+          style={
+            {
+              "--hstat-accent": "#8fa8ff",
+              "--hstat-soft": "rgba(143, 168, 255, 0.12)",
+            } as CSSProperties
+          }
+        >
           <b>
             {thisWeekMinutes} / {weeklyGoal}
           </b>
@@ -185,12 +251,24 @@ export default async function AnalyticsPage() {
       </div>
 
       <div className="grid" style={{ marginTop: 18 }}>
-        <BarChart title="Last 7 days (minutes)" data={last7} />
-        <BarChart title="Last 30 days (minutes)" data={last30} />
+        <BarChart
+          title="Last 7 days (minutes)"
+          data={last7}
+          accent="linear-gradient(180deg, #aab8ff 0%, #8fa8ff 100%)"
+        />
+        <BarChart title="Last 30 days (minutes)" data={last30} compact />
       </div>
 
       <div className="grid" style={{ marginTop: 14 }}>
-        <div className="card">
+        <div
+          className="card card-accent"
+          style={
+            {
+              "--card-accent": "#8fa8ff",
+              "--card-soft": "rgba(143, 168, 255, 0.10)",
+            } as CSSProperties
+          }
+        >
           <h3>Weekly goal</h3>
           <p>
             This week: {thisWeekMinutes} of {weeklyGoal} minutes
@@ -199,11 +277,32 @@ export default async function AnalyticsPage() {
               : ""}
             .
           </p>
+          <div className="progress" style={{ marginTop: 12 }}>
+            <i
+              style={{
+                width: `${
+                  weeklyGoal > 0
+                    ? Math.min(100, Math.round((thisWeekMinutes / weeklyGoal) * 100))
+                    : 0
+                }%`,
+                background:
+                  "linear-gradient(180deg, #aab8ff 0%, #8fa8ff 100%)",
+              }}
+            />
+          </div>
           <div style={{ marginTop: 12 }}>
             <GoalSetter currentGoal={weeklyGoal} />
           </div>
         </div>
-        <div className="card">
+        <div
+          className="card card-accent"
+          style={
+            {
+              "--card-accent": "#8fa8ff",
+              "--card-soft": "rgba(143, 168, 255, 0.10)",
+            } as CSSProperties
+          }
+        >
           <h3>Progress by department</h3>
           {DEPARTMENTS.map((dept) => {
             const mins = byDepartment.get(dept) ?? 0;
@@ -230,7 +329,7 @@ export default async function AnalyticsPage() {
         </div>
       </div>
 
-      <div className="card" style={{ marginTop: 14 }}>
+      <div className="card card-flat" style={{ marginTop: 14 }}>
         <h3>Recent sessions</h3>
         {sessions.length === 0 ? (
           <p className="empty">

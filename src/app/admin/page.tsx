@@ -11,6 +11,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import type { CSSProperties } from "react";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase";
 import {
   ADMIN_ROLES,
@@ -174,19 +175,27 @@ export default function AdminPage() {
   if (loading) {
     return (
       <section className="section" data-page="admin">
-        <h2>Admin Panel</h2>
-        <p className="sub">Loading…</p>
+        <div className="page-head">
+          <span className="eyebrow">Console</span>
+          <h1>Admin Panel</h1>
+          <span className="accent-bar" aria-hidden="true" />
+          <p>Loading…</p>
+        </div>
       </section>
     );
   }
 
   return (
     <section className="section" data-page="admin">
-      <h2>Admin Panel</h2>
-      <p className="sub">
-        Run the app: people, roles and subscription settings. Only admins
-        can use this page.
-      </p>
+      <div className="page-head">
+        <span className="eyebrow">Console</span>
+        <h1>Admin Panel</h1>
+        <span className="accent-bar" aria-hidden="true" />
+        <p>
+          Run the app: people, roles and subscription settings. Only admins
+          can use this page.
+        </p>
+      </div>
 
       {!configured && (
         <p className="note">
@@ -201,8 +210,8 @@ export default function AdminPage() {
       )}
 
       {configured && signedIn && setupNeeded && (
-        <div className="card">
-          <span className="chip">First setup</span>
+        <div className="card card-gold">
+          <span className="chip chip-accent">First setup</span>
           <h3 style={{ marginTop: 0 }}>Become the first Super Admin</h3>
           <p>
             No admin exists yet. The first person to claim this becomes the
@@ -278,8 +287,22 @@ export default function AdminPage() {
             </div>
           </div>
 
-          <div className="card" style={{ marginTop: 16 }}>
-            <h3 style={{ marginTop: 0 }}>Subscriptions</h3>
+          <div
+            className="card card-accent"
+            style={
+              {
+                marginTop: 16,
+                "--card-accent": "#f2c94c",
+                "--card-soft": "rgba(242, 201, 76, 0.10)",
+              } as CSSProperties
+            }
+          >
+            <h3 style={{ marginTop: 0 }}>
+              Subscriptions{" "}
+              <span className="badge-soft">
+                Free Mode {settings.freeMode ? "ON" : "OFF"}
+              </span>
+            </h3>
             <p className="sub">
               Free Mode is ON by default — everything is free (Rs 0). Turn it
               off only when paid plans are ready. There is no payment gateway
@@ -288,9 +311,12 @@ export default function AdminPage() {
             </p>
             <div className="form">
               <div>
-                <label htmlFor="free-mode">Free Mode</label>
+                <label htmlFor="free-mode" className="field-label">
+                  Free Mode
+                </label>
                 <select
                   id="free-mode"
+                  className="field"
                   value={settings.freeMode ? "on" : "off"}
                   disabled={myRole !== "Super Admin"}
                   onChange={(e) =>
@@ -305,24 +331,28 @@ export default function AdminPage() {
                 </select>
               </div>
               <div>
-                <label htmlFor="pro-price">Pro price per year (Rs)</label>
+                <label htmlFor="pro-price" className="field-label">
+                  Pro price per year (Rs)
+                </label>
                 <input
                   id="pro-price"
                   type="number"
                   min={0}
+                  className="field"
                   value={proPrice}
                   disabled={myRole !== "Super Admin"}
                   onChange={(e) => setProPrice(e.target.value)}
                 />
               </div>
               <div>
-                <label htmlFor="premium-price">
+                <label htmlFor="premium-price" className="field-label">
                   Premium price per year (Rs)
                 </label>
                 <input
                   id="premium-price"
                   type="number"
                   min={0}
+                  className="field"
                   value={premiumPrice}
                   disabled={myRole !== "Super Admin"}
                   onChange={(e) => setPremiumPrice(e.target.value)}
@@ -345,7 +375,16 @@ export default function AdminPage() {
             </div>
           </div>
 
-          <div className="card" style={{ marginTop: 16 }}>
+          <div
+            className="card card-accent"
+            style={
+              {
+                marginTop: 16,
+                "--card-accent": "#f2c94c",
+                "--card-soft": "rgba(242, 201, 76, 0.10)",
+              } as CSSProperties
+            }
+          >
             <h3 style={{ marginTop: 0 }}>People &amp; roles</h3>
             <p className="sub">
               Give a signed-up user an admin role. Removing the last Super
@@ -376,6 +415,8 @@ export default function AdminPage() {
                     <div className="rowbtns">
                       <select
                         aria-label={`Role for ${p.full_name || "user"}`}
+                        className="field"
+                        style={{ minHeight: 44 }}
                         value={roleOf(p.id) ?? ""}
                         disabled={busy || myRole !== "Super Admin"}
                         onChange={(e) =>
@@ -399,7 +440,7 @@ export default function AdminPage() {
             )}
           </div>
 
-          <div className="card" style={{ marginTop: 16 }}>
+          <div className="card card-flat" style={{ marginTop: 16 }}>
             <h3 style={{ marginTop: 0 }}>Content</h3>
             <p className="sub">
               The training content lives in the app itself. Counts are live:

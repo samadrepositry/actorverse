@@ -6,6 +6,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import type { CSSProperties } from "react";
 import Link from "next/link";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase";
 import {
@@ -232,11 +233,15 @@ export default function ScriptsPage() {
 
   return (
     <section className="section" data-page="scripts">
-      <h2>Script Vault</h2>
-      <p className="sub">
-        Your private PDF scripts. Only you can see them. PDF only, up to
-        about 10 MB each.
-      </p>
+      <div className="page-head">
+        <span className="eyebrow">Private Vault</span>
+        <h1>Script Vault</h1>
+        <span className="accent-bar" aria-hidden="true"></span>
+        <p>
+          Your private PDF scripts. Only you can see them. PDF only, up to
+          about 10 MB each.
+        </p>
+      </div>
 
       {signedIn === false && (
         <p className="note">
@@ -247,7 +252,16 @@ export default function ScriptsPage() {
 
       {signedIn === true && (
         <>
-          <div className="card" style={{ marginBottom: 14 }}>
+          <div
+            className="card card-accent"
+            style={
+              {
+                marginBottom: 14,
+                "--card-accent": "#b48cff",
+                "--card-soft": "rgba(180, 140, 255, 0.10)",
+              } as CSSProperties
+            }
+          >
             <h3 style={{ marginTop: 0 }}>Upload a script</h3>
             <div className="form">
               <div>
@@ -256,6 +270,7 @@ export default function ScriptsPage() {
                   ref={fileInputRef}
                   id="script-file"
                   type="file"
+                  className="field"
                   accept="application/pdf,.pdf"
                   onChange={(e) => handleFilePicked(e.target.files?.[0])}
                 />
@@ -271,6 +286,7 @@ export default function ScriptsPage() {
                 <input
                   id="script-title"
                   type="text"
+                  className="field"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="Script title"
@@ -284,6 +300,7 @@ export default function ScriptsPage() {
                 <textarea
                   id="script-text"
                   rows={4}
+                  className="field"
                   value={scriptText}
                   onChange={(e) => setScriptText(e.target.value)}
                   placeholder="Paste the script text here (optional — otherwise the PDF is read automatically)…"
@@ -311,25 +328,17 @@ export default function ScriptsPage() {
               {uploadStage === "uploading" && (
                 <>
                   <div
+                    className="progress"
                     role="progressbar"
                     aria-valuenow={uploadProgress ?? undefined}
                     aria-valuemin={0}
                     aria-valuemax={100}
                     aria-label="Upload progress"
-                    style={{
-                      height: 8,
-                      borderRadius: 999,
-                      background: "rgba(255,255,255,0.12)",
-                      overflow: "hidden",
-                    }}
                   >
                     <div
+                      className="progress-bar"
                       style={{
-                        height: "100%",
                         width: `${uploadProgress ?? 0}%`,
-                        background: "#f2c94c",
-                        borderRadius: 999,
-                        transition: "width 0.3s ease",
                       }}
                     />
                   </div>
@@ -351,7 +360,7 @@ export default function ScriptsPage() {
             </div>
           </div>
 
-          <div className="card">
+          <div className="card card-flat">
             <h3 style={{ marginTop: 0 }}>My scripts</h3>
             {scripts.length === 0 && (
               <p className="empty">
@@ -389,6 +398,7 @@ export default function ScriptsPage() {
                       <div className="form" style={{ marginTop: 10 }}>
                         <input
                           type="text"
+                          className="field"
                           value={renameValue}
                           onChange={(e) => setRenameValue(e.target.value)}
                           placeholder="New title"
@@ -449,7 +459,7 @@ export default function ScriptsPage() {
                         </button>
                         <button
                           type="button"
-                          className="btn btn-line"
+                          className="btn btn-danger"
                           disabled={rowBusy === row.id}
                           onClick={() => void handleDelete(row)}
                         >

@@ -7,6 +7,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import type { CSSProperties } from "react";
 import { useRecorder, formatClock } from "@/lib/useRecorder";
 import { downloadBlob, downloadFromUrl } from "@/lib/recorder";
 import type { ShotSize, Take } from "@/lib/recorder";
@@ -24,6 +25,21 @@ const SHOTS: { id: ShotSize; label: string; hint: string }[] = [
   { id: "wide", label: "Wide Shot", hint: "Full body, head to feet" },
   { id: "medium", label: "Medium Shot", hint: "Shoulders up" },
   { id: "closeup", label: "Close-up", hint: "Face, large and close" },
+];
+
+/* Viewfinder corner marks (pure decoration over the camera preview). */
+const VIEWFINDER_CORNER: CSSProperties = {
+  position: "absolute",
+  width: 26,
+  height: 26,
+  pointerEvents: "none",
+  zIndex: 2,
+};
+const VIEWFINDER_CORNERS: CSSProperties[] = [
+  { ...VIEWFINDER_CORNER, top: 10, left: 10, borderTop: "2px solid rgba(242, 201, 76, 0.9)", borderLeft: "2px solid rgba(242, 201, 76, 0.9)", borderTopLeftRadius: 6 },
+  { ...VIEWFINDER_CORNER, top: 10, right: 10, borderTop: "2px solid rgba(242, 201, 76, 0.9)", borderRight: "2px solid rgba(242, 201, 76, 0.9)", borderTopRightRadius: 6 },
+  { ...VIEWFINDER_CORNER, bottom: 10, left: 10, borderBottom: "2px solid rgba(242, 201, 76, 0.9)", borderLeft: "2px solid rgba(242, 201, 76, 0.9)", borderBottomLeftRadius: 6 },
+  { ...VIEWFINDER_CORNER, bottom: 10, right: 10, borderBottom: "2px solid rgba(242, 201, 76, 0.9)", borderRight: "2px solid rgba(242, 201, 76, 0.9)", borderBottomRightRadius: 6 },
 ];
 
 function takeFilename(title: string, extension: string): string {
@@ -323,11 +339,15 @@ export default function StudioPage() {
 
   return (
     <section className="section" data-page="studio">
-      <h2>Studio</h2>
-      <p className="sub">
-        Record in front of the camera, then keep your takes here. Only you
-        can see them.
-      </p>
+      <div className="page-head">
+        <span className="eyebrow">Recording Studio</span>
+        <h1>Studio</h1>
+        <span className="accent-bar" aria-hidden="true"></span>
+        <p>
+          Record in front of the camera, then keep your takes here. Only you
+          can see them.
+        </p>
+      </div>
 
       <p className="step-strip">
         <span><b>1</b> Open the camera</span>
@@ -335,7 +355,16 @@ export default function StudioPage() {
         <span><b>3</b> Stop &amp; save</span>
       </p>
 
-      <div className="card" style={{ marginBottom: 14 }}>
+      <div
+        className="card card-accent"
+        style={
+          {
+            "--card-accent": "#ff7a9e",
+            "--card-soft": "rgba(255, 122, 158, 0.12)",
+            marginBottom: 14,
+          } as CSSProperties
+        }
+      >
         <h3 style={{ marginTop: 0 }}>Camera Studio</h3>
         <div className="shot-row" role="group" aria-label="Shot size">
           {SHOTS.map((s) => (
@@ -343,6 +372,7 @@ export default function StudioPage() {
               key={s.id}
               type="button"
               className="fbtn"
+              style={{ minHeight: 44 }}
               aria-pressed={shot === s.id}
               disabled={recording}
               onClick={() => void changeShot(s.id)}
@@ -354,6 +384,7 @@ export default function StudioPage() {
           <button
             type="button"
             className="fbtn"
+            style={{ minHeight: 44 }}
             disabled={recording}
             onClick={() => void toggleFacing()}
           >
@@ -368,7 +399,14 @@ export default function StudioPage() {
               : "Close-up: your face, large and close."}
         </p>
 
-        <div className="video-wrap">
+        <div
+          className="video-wrap"
+          style={{
+            borderColor: "rgba(242, 201, 76, 0.35)",
+            boxShadow:
+              "0 12px 32px rgba(0, 0, 0, 0.55), 0 0 26px rgba(242, 201, 76, 0.10)",
+          }}
+        >
           <video
             ref={videoRef}
             playsInline
@@ -376,12 +414,15 @@ export default function StudioPage() {
             autoPlay
             style={{ transform: `scale(${rec.previewScale})` }}
           />
+          {VIEWFINDER_CORNERS.map((corner, i) => (
+            <span key={i} style={corner} aria-hidden="true" />
+          ))}
           {!cameraOn && (
             <div className="video-empty">
               <p>Camera is off.</p>
               <button
                 type="button"
-                className="btn btn-gold"
+                className="btn btn-primary"
                 disabled={cameraBusy || recording}
                 onClick={() => void openCamera(facing, shot)}
               >
@@ -436,7 +477,12 @@ export default function StudioPage() {
           className={"record-btn" + (recording ? " recording" : "")}
           disabled={cameraBusy}
           onClick={() => void handleRecordToggle()}
-          style={{ marginTop: 14 }}
+          style={{
+            marginTop: 14,
+            boxShadow: recording
+              ? "0 6px 30px rgba(193, 39, 45, 0.45)"
+              : "0 8px 22px rgba(0, 0, 0, 0.3)",
+          }}
         >
           {recording
             ? `■ STOP & SAVE (${formatClock(seconds)})`
@@ -456,7 +502,15 @@ export default function StudioPage() {
         )}
 
         {lastTake && takeUrl && (
-          <div style={{ marginTop: 16 }}>
+          <div
+            style={{
+              marginTop: 16,
+              background: "var(--surface)",
+              border: "1px solid var(--line)",
+              borderRadius: 14,
+              padding: 16,
+            }}
+          >
             <h3 style={{ marginTop: 0 }}>
               Your take — {formatClock(lastTake.durationSeconds)}
             </h3>
@@ -466,11 +520,16 @@ export default function StudioPage() {
               controls
               playsInline
               preload="metadata"
+              style={{
+                borderColor: "rgba(242, 201, 76, 0.35)",
+                boxShadow: "0 8px 22px rgba(0, 0, 0, 0.3)",
+              }}
             />
             <div className="form" style={{ marginTop: 12 }}>
-              <label htmlFor="studio-take-title">Title for this take</label>
+              <label className="field-label" htmlFor="studio-take-title">Title for this take</label>
               <input
                 id="studio-take-title"
+                className="field"
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
@@ -480,14 +539,14 @@ export default function StudioPage() {
             <div className="rowbtns">
               <button
                 type="button"
-                className="btn btn-dark"
+                className="btn btn-primary"
                 onClick={handleSaveToPhone}
               >
                 Save to phone
               </button>
               <button
                 type="button"
-                className="btn btn-line"
+                className="btn btn-danger"
                 onClick={() => void handleDeleteTake()}
               >
                 Delete
@@ -511,7 +570,7 @@ export default function StudioPage() {
             {saveState === "failed" && lastTake && !lastTake.tooLarge && (
               <button
                 type="button"
-                className="btn btn-line"
+                className="btn btn-secondary"
                 disabled={saving}
                 onClick={() => void retrySaveOnline()}
                 style={{ marginTop: 8 }}
@@ -529,7 +588,7 @@ export default function StudioPage() {
         )}
       </div>
 
-      <div className="card">
+      <div className="card card-flat">
         <h3 style={{ marginTop: 0 }}>My Private Recordings</h3>
         {signedIn === false && (
           <p className="note">
@@ -543,16 +602,29 @@ export default function StudioPage() {
         {signedIn === true && recordings.length > 0 && (
           <ul className="session-list">
             {recordings.map((row) => (
-              <li key={row.id} style={{ display: "block" }}>
+              <li
+                key={row.id}
+                style={{
+                  display: "block",
+                  background: "var(--surface)",
+                  border: "1px solid var(--line)",
+                  borderLeft: "3px solid var(--gold)",
+                  borderRadius: 12,
+                  padding: 14,
+                  marginBottom: 10,
+                  boxShadow: "0 2px 8px rgba(0, 0, 0, 0.35)",
+                }}
+              >
                 <div
                   style={{
                     display: "flex",
                     justifyContent: "space-between",
                     gap: 12,
                     alignItems: "baseline",
+                    flexWrap: "wrap",
                   }}
                 >
-                  <strong>{row.title}</strong>
+                  <strong style={{ minWidth: 0, overflowWrap: "break-word" }}>{row.title}</strong>
                   <span className="muted">
                     {formatClock(row.duration_seconds)} · {formatDate(row.created_at)}
                   </span>
@@ -565,13 +637,16 @@ export default function StudioPage() {
                     autoPlay
                     playsInline
                     preload="metadata"
-                    style={{ marginTop: 10 }}
+                    style={{
+                      marginTop: 10,
+                      borderColor: "rgba(242, 201, 76, 0.35)",
+                    }}
                   />
                 )}
                 <div className="rowbtns">
                   <button
                     type="button"
-                    className="btn btn-line"
+                    className="btn btn-secondary"
                     disabled={rowBusy === row.id}
                     onClick={() => void handlePlay(row)}
                   >
@@ -579,7 +654,7 @@ export default function StudioPage() {
                   </button>
                   <button
                     type="button"
-                    className="btn btn-line"
+                    className="btn btn-primary"
                     disabled={rowBusy === row.id}
                     onClick={() => void handleDownloadSaved(row)}
                   >
@@ -587,7 +662,7 @@ export default function StudioPage() {
                   </button>
                   <button
                     type="button"
-                    className="btn btn-line"
+                    className="btn btn-danger"
                     disabled={rowBusy === row.id}
                     onClick={() => void handleDelete(row)}
                   >

@@ -141,11 +141,15 @@ export default function PlansPage() {
 
   return (
     <section className="section" data-page="plans">
-      <h2>Training Plans</h2>
-      <p className="sub">
-        Follow a plan for a few weeks, a little every day. All plans are
-        free — Rs 0.
-      </p>
+      <div className="page-head">
+        <span className="eyebrow">Guided Training</span>
+        <h1>Training Plans</h1>
+        <span className="accent-bar" aria-hidden="true"></span>
+        <p>
+          Follow a plan for a few weeks, a little every day. All plans are
+          free — Rs 0.
+        </p>
+      </div>
 
       {signedIn === false && (
         <p className="note">
@@ -156,7 +160,16 @@ export default function PlansPage() {
 
       <div className="grid">
         {PLANS.map((plan) => (
-          <article key={plan.id} className="card">
+          <article
+            key={plan.id}
+            className="card card-accent"
+            style={
+              {
+                "--card-accent": deptAccent(plan.department).color,
+                "--card-soft": deptAccent(plan.department).soft,
+              } as CSSProperties
+            }
+          >
             <span
               className="chip"
               style={
@@ -220,7 +233,7 @@ export default function PlansPage() {
         ))}
       </div>
 
-      <div className="card" style={{ marginTop: 16 }}>
+      <div className="card card-gold" style={{ marginTop: 16 }}>
         <h3 style={{ marginTop: 0 }}>Build your own plan</h3>
         <p className="sub">
           Pick a department, minutes per day and weeks — we save it as your
@@ -232,6 +245,7 @@ export default function PlansPage() {
             <input
               id="custom-title"
               type="text"
+              className="field"
               value={customTitle}
               onChange={(e) => setCustomTitle(e.target.value)}
               placeholder="e.g. My voice month"
@@ -241,6 +255,7 @@ export default function PlansPage() {
             <label htmlFor="custom-department">Department</label>
             <select
               id="custom-department"
+              className="field"
               value={customDepartment}
               onChange={(e) =>
                 setCustomDepartment(
@@ -300,7 +315,7 @@ export default function PlansPage() {
       </div>
 
       {signedIn === true && (
-        <div className="card" style={{ marginTop: 16 }}>
+        <div className="card card-flat" style={{ marginTop: 16 }}>
           <h3 style={{ marginTop: 0 }}>My plans</h3>
           {enrollments.length === 0 && (
             <p className="sub">You are not enrolled in any plan yet.</p>

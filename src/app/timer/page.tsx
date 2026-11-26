@@ -130,16 +130,23 @@ function TimerContent() {
   }, []);
 
   const progress = total > 0 ? ((total - left) / total) * 100 : 0;
+  // Progress ring: circumference for r=120 (2πr ≈ 753.98).
+  const ringC = 2 * Math.PI * 120;
+  const ringOffset = ringC * (1 - progress / 100);
 
   return (
     <section className="section" data-page="timer">
-      <h2>My Timer</h2>
-      <p className="sub">
-        For any exercise or rehearsal. Pick a time, press Start — when it
-        finishes, it saves by itself.
-      </p>
+      <div className="page-head">
+        <span className="eyebrow">Practice</span>
+        <h1>My Timer</h1>
+        <span className="accent-bar" aria-hidden="true" />
+        <p>
+          For any exercise or rehearsal. Pick a time, press Start — when it
+          finishes, it saves by itself.
+        </p>
+      </div>
       <div
-        className={"card" + (running ? " timer-running" : "")}
+        className={"card card-gold" + (running ? " timer-running" : "")}
         style={{ maxWidth: 640, margin: "0 auto" }}
       >
         {exerciseTitle && (
@@ -149,8 +156,59 @@ function TimerContent() {
           </p>
         )}
         <div className="timer-face">
-          <div className="big" aria-live="off">
-            {format(left)}
+          <div
+            style={{
+              position: "relative",
+              width: "min(76vw, 300px)",
+              height: "min(76vw, 300px)",
+              margin: "0 auto",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <svg
+              viewBox="0 0 260 260"
+              style={{
+                position: "absolute",
+                inset: 0,
+                width: "100%",
+                height: "100%",
+                transform: "rotate(-90deg)",
+              }}
+              aria-hidden="true"
+            >
+              <defs>
+                <linearGradient id="timer-ring-gold" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stopColor="#f8d97a" />
+                  <stop offset="45%" stopColor="#f2c94c" />
+                  <stop offset="100%" stopColor="#dfa52a" />
+                </linearGradient>
+              </defs>
+              <circle
+                cx="130"
+                cy="130"
+                r="120"
+                fill="none"
+                stroke="var(--surface-2)"
+                strokeWidth="10"
+              />
+              <circle
+                cx="130"
+                cy="130"
+                r="120"
+                fill="none"
+                stroke="url(#timer-ring-gold)"
+                strokeWidth="10"
+                strokeLinecap="round"
+                strokeDasharray={ringC}
+                strokeDashoffset={ringOffset}
+                style={{ transition: "stroke-dashoffset 0.5s ease" }}
+              />
+            </svg>
+            <div className="big" aria-live="off">
+              {format(left)}
+            </div>
           </div>
           <div className="prog">
             <i style={{ width: `${progress}%` }} />
@@ -165,6 +223,7 @@ function TimerContent() {
               key={min}
               type="button"
               className="preset"
+              style={{ minHeight: 44 }}
               aria-pressed={total / 60 === min}
               onClick={() => setTimer(min)}
             >
@@ -175,14 +234,14 @@ function TimerContent() {
         <div className="rowbtns" style={{ justifyContent: "center" }}>
           <button
             type="button"
-            className="btn btn-red"
+            className="btn btn-primary"
             onClick={handleStartPause}
           >
             {running ? "Pause" : left < total && left > 0 ? "Resume" : "Start"}
           </button>
           <button
             type="button"
-            className="btn btn-line"
+            className="btn btn-secondary"
             onClick={() => setTimer(total / 60)}
           >
             Reset

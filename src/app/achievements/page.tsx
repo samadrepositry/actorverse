@@ -4,6 +4,7 @@
 // shows its progress.
 
 import Link from "next/link";
+import type { CSSProperties } from "react";
 import { createServerSupabaseClient } from "@/lib/supabase-server";
 import { isSupabaseConfigured } from "@/lib/supabase-shared";
 import { computeAchievements } from "@/lib/achievements";
@@ -35,11 +36,15 @@ export default async function AchievementsPage() {
 
   return (
     <section className="section" data-page="achievements">
-      <h2>Achievements</h2>
-      <p className="sub">
-        Badges you earn by actually training. No shortcuts — practise, and
-        they unlock.
-      </p>
+      <div className="page-head">
+        <span className="eyebrow">Progress</span>
+        <h1>Achievements</h1>
+        <span className="accent-bar" aria-hidden="true" />
+        <p>
+          Badges you earn by actually training. No shortcuts — practise, and
+          they unlock.
+        </p>
+      </div>
 
       {!configured && (
         <p className="note">
@@ -57,19 +62,51 @@ export default async function AchievementsPage() {
       {signedIn && (
         <>
           <div className="hero-stats" style={{ justifyContent: "flex-start" }}>
-            <div className="hstat">
+            <div
+              className="hstat"
+              style={
+                {
+                  "--hstat-accent": "#ff8fd1",
+                  "--hstat-soft": "rgba(255, 143, 209, 0.12)",
+                } as CSSProperties
+              }
+            >
               <b>{earned}</b>
               <span>Badges earned</span>
             </div>
-            <div className="hstat">
+            <div
+              className="hstat"
+              style={
+                {
+                  "--hstat-accent": "#ff8fd1",
+                  "--hstat-soft": "rgba(255, 143, 209, 0.12)",
+                } as CSSProperties
+              }
+            >
               <b>{summary.totalSessions}</b>
               <span>Sessions</span>
             </div>
-            <div className="hstat">
+            <div
+              className="hstat"
+              style={
+                {
+                  "--hstat-accent": "#ff8fd1",
+                  "--hstat-soft": "rgba(255, 143, 209, 0.12)",
+                } as CSSProperties
+              }
+            >
               <b>{summary.totalMinutes}</b>
               <span>Minutes</span>
             </div>
-            <div className="hstat">
+            <div
+              className="hstat"
+              style={
+                {
+                  "--hstat-accent": "#ff8fd1",
+                  "--hstat-soft": "rgba(255, 143, 209, 0.12)",
+                } as CSSProperties
+              }
+            >
               <b>{summary.streak}</b>
               <span>Day streak</span>
             </div>

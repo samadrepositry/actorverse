@@ -5,6 +5,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import type { CSSProperties } from "react";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase";
 import { createPost, deleteMyPost, listPosts } from "@/lib/community";
 import type { PostWithAuthor } from "@/lib/community";
@@ -93,11 +94,15 @@ export default function CommunityPage() {
 
   return (
     <section className="section" data-page="community">
-      <h2>Community</h2>
-      <p className="sub">
-        Actors helping actors. Share a win, a question, or a tip. Keep it
-        kind — posts are public to every signed-in actor here.
-      </p>
+      <div className="page-head" style={{ paddingTop: 0 }}>
+        <span className="eyebrow">Discussion</span>
+        <h1>Community</h1>
+        <span className="accent-bar" aria-hidden="true" />
+        <p>
+          Actors helping actors. Share a win, a question, or a tip. Keep it
+          kind — posts are public to every signed-in actor here.
+        </p>
+      </div>
 
       {signedIn === false && (
         <p className="note">
@@ -108,10 +113,20 @@ export default function CommunityPage() {
 
       {signedIn === true && (
         <>
-          <div className="card" style={{ marginBottom: 14 }}>
+          <div
+            className="card card-accent"
+            style={
+              {
+                "--card-accent": "#7ee0d2",
+                "--card-soft": "rgba(126, 224, 210, 0.10)",
+                marginBottom: 14,
+              } as CSSProperties
+            }
+          >
             <h3 style={{ marginTop: 0 }}>Write a post</h3>
             <div className="form">
               <textarea
+                className="field"
                 rows={3}
                 maxLength={500}
                 value={body}
@@ -139,7 +154,7 @@ export default function CommunityPage() {
             </div>
           </div>
 
-          <div className="card">
+          <div className="card card-flat">
             <h3 style={{ marginTop: 0 }}>Latest posts</h3>
             {posts.length === 0 && (
               <p className="empty">
@@ -149,13 +164,24 @@ export default function CommunityPage() {
             {posts.length > 0 && (
               <ul className="session-list">
                 {posts.map((post) => (
-                  <li key={post.id} style={{ display: "block" }}>
+                  <li
+                    key={post.id}
+                    style={{
+                      display: "block",
+                      background: "var(--surface)",
+                      border: "1px solid var(--line)",
+                      borderRadius: 14,
+                      padding: 16,
+                      marginBottom: 12,
+                    }}
+                  >
                     <div
                       style={{
                         display: "flex",
                         justifyContent: "space-between",
                         gap: 12,
                         alignItems: "baseline",
+                        flexWrap: "wrap",
                       }}
                     >
                       <strong>{post.authorName}</strong>

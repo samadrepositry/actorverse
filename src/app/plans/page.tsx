@@ -167,6 +167,8 @@ export default function PlansPage() {
               {
                 "--card-accent": deptAccent(plan.department).color,
                 "--card-soft": deptAccent(plan.department).soft,
+                display: "flex",
+                flexDirection: "column",
               } as CSSProperties
             }
           >
@@ -207,7 +209,7 @@ export default function PlansPage() {
                 ))}
               </ul>
             </details>
-            <div className="rowbtns">
+            <div className="rowbtns" style={{ marginTop: "auto", paddingTop: 14 }}>
               <button
                 type="button"
                 className="btn btn-gold"

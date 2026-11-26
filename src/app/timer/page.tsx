@@ -190,7 +190,8 @@ function TimerContent() {
                 cy="130"
                 r="120"
                 fill="none"
-                stroke="var(--surface-2)"
+                stroke="var(--gold)"
+                strokeOpacity={0.25}
                 strokeWidth="10"
               />
               <circle

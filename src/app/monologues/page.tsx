@@ -29,13 +29,15 @@ export default function MonologuesPage() {
               {
                 "--card-accent": "#4dd8c4",
                 "--card-soft": "rgba(77, 216, 196, 0.10)",
+                display: "flex",
+                flexDirection: "column",
               } as CSSProperties
             }
           >
             <span className="chip">Monologue</span>
             <h3>{m.title}</h3>
             <p>{m.character}</p>
-            <details style={{ marginTop: 10 }}>
+            <details style={{ marginTop: "auto", paddingTop: 10 }}>
               <summary
                 style={{
                   cursor: "pointer",

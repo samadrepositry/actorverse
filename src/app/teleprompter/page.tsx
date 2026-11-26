@@ -91,6 +91,9 @@ function TeleprompterPageInner() {
   const scriptRef = useRef<HTMLDivElement | null>(null);
   const speedRef = useRef(speed);
   speedRef.current = speed;
+  // Cleaned photo (grayscale, contrast-stretched) ready for either scan
+  // path. The raw photo stays in scanImage for the preview.
+  const scanOcrRef = useRef<string | null>(null);
 
   const script = useOwn
     ? ownText
@@ -317,9 +320,42 @@ function TeleprompterPageInner() {
     return canvas.toDataURL("image/png");
   }
 
-  /** Scan a photographed or uploaded page into the editable text box. */
+  /**
+   * Shrink a photo to a small JPEG for the AI scan, so the upload stays
+   * well under the server's size limit. Falls back to the input image
+   * when the conversion fails.
+   */
+  async function toJpegForAi(dataUrl: string): Promise<string> {
+    try {
+      const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+        const el = new Image();
+        el.onload = () => resolve(el);
+        el.onerror = () => reject(new Error("Could not read the photo."));
+        el.src = dataUrl;
+      });
+      const MAX_W = 1600;
+      const scale = Math.min(1, MAX_W / img.naturalWidth);
+      const w = Math.max(1, Math.round(img.naturalWidth * scale));
+      const h = Math.max(1, Math.round(img.naturalHeight * scale));
+      const canvas = document.createElement("canvas");
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return dataUrl;
+      ctx.drawImage(img, 0, 0, w, h);
+      return canvas.toDataURL("image/jpeg", 0.85);
+    } catch {
+      return dataUrl;
+    }
+  }
+
+  /**
+   * Take or upload a page photo: the photo is shown and the user picks
+   * how to read it — AI scan (best reading) or the phone scan (free, on
+   * this phone). Nothing is read until the user picks one.
+   */
   async function handleScanFile(file: File | undefined) {
-    if (!file) return;
+    if (!file || scanBusy) return;
     if (!file.type.startsWith("image/")) {
       setScanStatus("That file is not a picture. Choose an image file.");
       return;
@@ -329,19 +365,69 @@ function TeleprompterPageInner() {
       const dataUrl = String(reader.result);
       setScanImage(dataUrl);
       setScanNotice(false);
-      setScanBusy(true);
-      setScanStatus("Reading the page…");
+      setScanStatus("Photo ready — choose how to read it.");
+      // Clean the photo once (raw phone shots carry shadows and uneven
+      // light); if cleanup fails, both scan paths use the raw photo.
       try {
-        const Tesseract = (await import("tesseract.js")).default;
-        // Clean the photo first (raw phone shots carry shadows and
-        // uneven light); if cleanup fails, OCR the raw photo instead.
-        let ocrUrl = dataUrl;
-        try {
-          ocrUrl = await cleanPhotoForOcr(dataUrl);
-        } catch {
-          ocrUrl = dataUrl;
-        }
-        // Two separate passes — never one mixed "eng+urd" pass (that is
+        scanOcrRef.current = await cleanPhotoForOcr(dataUrl);
+      } catch {
+        scanOcrRef.current = dataUrl;
+      }
+    };
+    reader.onerror = () => {
+      setScanStatus("That picture could not be read. Try another image.");
+    };
+    reader.readAsDataURL(file);
+  }
+
+  /** AI scan: Gemini reads the words on the staged photo. */
+  async function handleAiScan() {
+    if (scanBusy || !scanImage) return;
+    setScanBusy(true);
+    setScanNotice(false);
+    setScanStatus("AI is reading the page…");
+    try {
+      const payload = await toJpegForAi(scanOcrRef.current ?? scanImage);
+      const res = await fetch("/api/scan", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image: payload }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data?.ok) {
+        setScanStatus("AI scan did not work — try the phone scan below.");
+        return;
+      }
+      const text = String(data.text ?? "").trim();
+      if (!text) {
+        setScanStatus(
+          "AI scan found no words on this page. Try a clearer photo, or use the phone scan below.",
+        );
+        return;
+      }
+      setOwnText(text);
+      setUseOwn(true);
+      setTitle("Scanned page");
+      setScanNotice(true);
+      setScanStatus("Page read. Check the words below, then press RECORD.");
+      setTakeError(null);
+    } catch {
+      setScanStatus("AI scan did not work — try the phone scan below.");
+    } finally {
+      setScanBusy(false);
+    }
+  }
+
+  /** Phone scan: tesseract reads the staged photo on this phone (free). */
+  async function handlePhoneScan() {
+    if (scanBusy || !scanImage) return;
+    setScanBusy(true);
+    setScanNotice(false);
+    setScanStatus("Reading the page…");
+    try {
+      const Tesseract = (await import("tesseract.js")).default;
+      const ocrUrl = scanOcrRef.current ?? scanImage;
+      // Two separate passes — never one mixed "eng+urd" pass (that is
         // what mixed Latin junk into the Urdu). Each pass reads the
         // cleaned photo in one language with PSM 6 (one dense block of
         // text — a novel page). The pass with the stronger read wins and
@@ -406,7 +492,7 @@ function TeleprompterPageInner() {
       } catch {
         // Never fake a transcription: pin the photo as a picture prompt
         // and ask for the text to be typed or pasted instead.
-        setPicture(dataUrl);
+        setPicture(scanImage);
         setScanNotice(false);
         setScanStatus(
           "Scanning did not work on this photo. The photo is pinned as a picture prompt above the camera — please type or paste the text in the Paste script tab instead.",
@@ -414,11 +500,6 @@ function TeleprompterPageInner() {
       } finally {
         setScanBusy(false);
       }
-    };
-    reader.onerror = () => {
-      setScanStatus("That picture could not be read. Try another image.");
-    };
-    reader.readAsDataURL(file);
   }
 
   function handlePictureFile(file: File | undefined) {
@@ -627,11 +708,38 @@ function TeleprompterPageInner() {
               phone seedha page ke upar rakhein.
             </p>
             {scanImage && (
-              <img
-                src={scanImage}
-                alt="Scanned page"
-                className="scan-preview"
-              />
+              <>
+                <img
+                  src={scanImage}
+                  alt="Scanned page"
+                  className="scan-preview"
+                />
+                <div className="rowbtns" style={{ marginTop: 12 }}>
+                  <button
+                    type="button"
+                    className="btn btn-gold"
+                    disabled={scanBusy}
+                    onClick={() => void handleAiScan()}
+                  >
+                    AI scan — best reading
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-line"
+                    disabled={scanBusy}
+                    onClick={() => void handlePhoneScan()}
+                  >
+                    Scan on this phone (free)
+                  </button>
+                </div>
+                <p
+                  className="sub"
+                  style={{ marginTop: 8, marginBottom: 0 }}
+                >
+                  AI scan sends this photo to Google Gemini to read it. The
+                  photo is not saved anywhere else.
+                </p>
+              </>
             )}
             {scanStatus && (
               <p

@@ -277,10 +277,28 @@ button {
   }
 }
 
-/* Hero */
+/* Hero — soft colourful glow behind the headline (CSS only, low
+   opacity, gold-dominant with hints of the app accents). */
 .hero {
+  position: relative;
   text-align: center;
   padding: 52px 16px 40px;
+}
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(520px 260px at 50% 0%, rgba(242, 201, 76, 0.14), transparent 70%),
+    radial-gradient(360px 200px at 10% 22%, rgba(110, 193, 255, 0.08), transparent 70%),
+    radial-gradient(360px 200px at 90% 26%, rgba(77, 216, 196, 0.07), transparent 70%),
+    radial-gradient(420px 220px at 50% 82%, rgba(180, 140, 255, 0.06), transparent 70%);
+}
+.hero > * {
+  position: relative;
+  z-index: 1;
 }
 .hero h1 {
   font-size: clamp(2.2rem, 7vw, 3.6rem);
@@ -309,12 +327,29 @@ button {
   margin: 26px 0 6px;
 }
 .hstat {
-  background: linear-gradient(180deg, var(--surface) 0%, var(--bg-soft) 100%);
+  background: linear-gradient(180deg, var(--hstat-soft, rgba(242, 201, 76, 0.10)) 0%, var(--surface) 55%, var(--bg-soft) 100%);
   border: 1px solid var(--line);
+  border-top: 2px solid var(--hstat-accent, var(--gold));
   border-radius: 12px;
   padding: 10px 16px;
   min-width: 104px;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+}
+.hstat-icon {
+  display: block;
+  width: 26px;
+  height: 26px;
+  margin: 0 auto 4px;
+  color: var(--hstat-accent, var(--gold));
+}
+.hstat-icon svg {
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 .hstat b {
   display: block;
@@ -1344,6 +1379,23 @@ main > section:nth-child(4) { animation-delay: 0.08s; }
 .section[data-page="dashboard"] .why-grid > *:nth-child(6) .why-num { background: #ff9a5c; }
 .section[data-page="dashboard"] .why-grid > *:nth-child(7) .why-num { background: #8fa8ff; }
 .section[data-page="dashboard"] .why-grid > *:nth-child(8) .why-num { background: #7ee0d2; }
+
+/* Home — "Why" cards take a soft tint of their number's colour. */
+.section[data-page="dashboard"] .why-grid > *:nth-child(1) { border-top: 2px solid #6ec1ff; background: linear-gradient(180deg, rgba(110, 193, 255, 0.10), var(--surface) 65%); }
+.section[data-page="dashboard"] .why-grid > *:nth-child(2) { border-top: 2px solid #ffb454; background: linear-gradient(180deg, rgba(255, 180, 84, 0.10), var(--surface) 65%); }
+.section[data-page="dashboard"] .why-grid > *:nth-child(3) { border-top: 2px solid #b48cff; background: linear-gradient(180deg, rgba(180, 140, 255, 0.10), var(--surface) 65%); }
+.section[data-page="dashboard"] .why-grid > *:nth-child(4) { border-top: 2px solid #4dd8c4; background: linear-gradient(180deg, rgba(77, 216, 196, 0.10), var(--surface) 65%); }
+.section[data-page="dashboard"] .why-grid > *:nth-child(5) { border-top: 2px solid #b8e05c; background: linear-gradient(180deg, rgba(184, 224, 92, 0.10), var(--surface) 65%); }
+.section[data-page="dashboard"] .why-grid > *:nth-child(6) { border-top: 2px solid #ff9a5c; background: linear-gradient(180deg, rgba(255, 154, 92, 0.10), var(--surface) 65%); }
+.section[data-page="dashboard"] .why-grid > *:nth-child(7) { border-top: 2px solid #8fa8ff; background: linear-gradient(180deg, rgba(143, 168, 255, 0.10), var(--surface) 65%); }
+.section[data-page="dashboard"] .why-grid > *:nth-child(8) { border-top: 2px solid #7ee0d2; background: linear-gradient(180deg, rgba(126, 224, 210, 0.10), var(--surface) 65%); }
+
+/* Home section headings — the gold rule becomes a soft gold gradient. */
+.section[data-page="dashboard"] > h2::after {
+  background: linear-gradient(90deg, #f8d97a 0%, #f2c94c 55%, rgba(242, 201, 76, 0) 100%);
+  width: 72px;
+  box-shadow: 0 0 14px rgba(242, 201, 76, 0.35);
+}
 
 /* Home — tool chips take their tool's section colour. */
 .section[data-page="dashboard"] .grid > *:nth-child(1) .chip { --dept: #6ec1ff; --dept-soft: rgba(110, 193, 255, 0.16); }

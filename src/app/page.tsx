@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { CSSProperties } from "react";
 import AuthForm from "@/components/AuthForm";
 import { createServerSupabaseClient } from "@/lib/supabase-server";
 import { DEPARTMENTS, EXERCISES } from "@/data/exercises";
@@ -36,15 +37,58 @@ export default async function HomePage() {
           </Link>
         </div>
         <div className="hero-stats">
-          <div className="hstat">
+          <div
+            className="hstat"
+            style={
+              {
+                "--hstat-accent": "#6ec1ff",
+                "--hstat-soft": "rgba(110, 193, 255, 0.12)",
+              } as CSSProperties
+            }
+          >
+            <span className="hstat-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M7 8v8M4 10v4M17 8v8M20 10v4M7 12h10" />
+              </svg>
+            </span>
             <b>{EXERCISES.length}</b>
             <span>Exercises</span>
           </div>
-          <div className="hstat">
+          <div
+            className="hstat"
+            style={
+              {
+                "--hstat-accent": "#b48cff",
+                "--hstat-soft": "rgba(180, 140, 255, 0.12)",
+              } as CSSProperties
+            }
+          >
+            <span className="hstat-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <rect x="4" y="4" width="7" height="7" rx="1.5" />
+                <rect x="13" y="4" width="7" height="7" rx="1.5" />
+                <rect x="4" y="13" width="7" height="7" rx="1.5" />
+                <rect x="13" y="13" width="7" height="7" rx="1.5" />
+              </svg>
+            </span>
             <b>{DEPARTMENTS.length}</b>
             <span>Departments</span>
           </div>
-          <div className="hstat">
+          <div
+            className="hstat"
+            style={
+              {
+                "--hstat-accent": "#4dd8c4",
+                "--hstat-soft": "rgba(77, 216, 196, 0.12)",
+              } as CSSProperties
+            }
+          >
+            <span className="hstat-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M6 2.5h8L19.5 8v13.5H6Z" />
+                <path d="M13.5 2.5V8H19.5M9 12.5h6M9 16h6" />
+              </svg>
+            </span>
             <b>14</b>
             <span>Monologues</span>
           </div>

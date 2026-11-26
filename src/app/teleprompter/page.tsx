@@ -99,6 +99,8 @@ function TeleprompterPageInner() {
   const [scanImage, setScanImage] = useState<string | null>(null);
   const [scanStatus, setScanStatus] = useState<string | null>(null);
   const [scanBusy, setScanBusy] = useState(false);
+  const [scanSeconds, setScanSeconds] = useState(0);
+  const scanTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [scanNotice, setScanNotice] = useState(false);
 
   const scriptRef = useRef<HTMLDivElement | null>(null);
@@ -371,6 +373,29 @@ function TeleprompterPageInner() {
   }
 
   /**
+   * Ticking seconds while a scan is busy, so the screen never looks
+   * frozen: the status line reads "AI is reading the page… 12s".
+   * The interval is cleared when the scan finishes, fails, or times
+   * out — and when the page unmounts mid-scan.
+   */
+  function startScanTimer() {
+    stopScanTimer();
+    setScanSeconds(0);
+    scanTimerRef.current = setInterval(() => {
+      setScanSeconds((s) => s + 1);
+    }, 1000);
+  }
+
+  function stopScanTimer() {
+    if (scanTimerRef.current !== null) {
+      clearInterval(scanTimerRef.current);
+      scanTimerRef.current = null;
+    }
+  }
+
+  useEffect(() => stopScanTimer, []);
+
+  /**
    * Take or upload a page photo: the photo is shown and the user picks
    * how to read it — AI scan (best reading) or the phone scan (free, on
    * this phone). Nothing is read until the user picks one.
@@ -406,13 +431,28 @@ function TeleprompterPageInner() {
     if (scanBusy || !scanImage) return;
     setScanBusy(true);
     setScanNotice(false);
-    setScanStatus("AI is reading the page…");
+    setScanSeconds(0);
+    startScanTimer();
+    setScanStatus("Preparing the photo…");
+    // 60s overall timeout: the server can take up to 20s per model ×
+    // 2 models, plus the upload over mobile internet — without this the
+    // screen could sit on one frozen line forever.
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000);
+    // fetch gives no upload-progress events. The photo is a few hundred
+    // KB, so the upload is done within a few seconds and the rest of the
+    // wait is Gemini reading — flip the label to say so.
+    const flipId = setTimeout(() => {
+      setScanStatus("AI is reading the page…");
+    }, 4000);
     try {
       const payload = await toJpegForAi(scanOcrRef.current ?? scanImage);
+      setScanStatus("Uploading photo…");
       const res = await fetch("/api/scan", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ image: payload }),
+        signal: controller.signal,
       });
       const data = await res.json().catch(() => null);
       if (!res.ok || !data?.ok) {
@@ -433,8 +473,17 @@ function TeleprompterPageInner() {
       setScanStatus("Page read. Check the words below, then press RECORD.");
       setTakeError(null);
     } catch {
-      setScanStatus("AI scan did not work — try the phone scan below.");
+      if (controller.signal.aborted) {
+        setScanStatus(
+          "AI scan is taking too long — the connection is slow. Please try again, or use the phone scan below.",
+        );
+      } else {
+        setScanStatus("AI scan did not work — try the phone scan below.");
+      }
     } finally {
+      clearTimeout(timeoutId);
+      clearTimeout(flipId);
+      stopScanTimer();
       setScanBusy(false);
     }
   }
@@ -444,7 +493,23 @@ function TeleprompterPageInner() {
     if (scanBusy || !scanImage) return;
     setScanBusy(true);
     setScanNotice(false);
+    setScanSeconds(0);
+    startScanTimer();
     setScanStatus("Reading the page…");
+    // 90s overall timeout. Tesseract has no abort, so the timeout
+    // terminates the workers — their recognize() then rejects and the
+    // catch below keeps this honest message instead of the generic one.
+    let phoneTimedOut = false;
+    const workers: Array<{ terminate: () => Promise<unknown> }> = [];
+    const phoneTimeoutId = setTimeout(() => {
+      phoneTimedOut = true;
+      for (const w of workers) {
+        w.terminate().catch(() => {});
+      }
+      setScanStatus(
+        "Phone scan is taking too long — please try a clearer photo, or use the AI scan above.",
+      );
+    }, 90000);
     try {
       const Tesseract = (await import("tesseract.js")).default;
       const ocrUrl = scanOcrRef.current ?? scanImage;
@@ -465,6 +530,7 @@ function TeleprompterPageInner() {
           const worker = await Tesseract.createWorker(lang, undefined, {
             logger: (m) => {
               if (
+                !phoneTimedOut &&
                 m.status === "recognizing text" &&
                 typeof m.progress === "number"
               ) {
@@ -476,6 +542,7 @@ function TeleprompterPageInner() {
               }
             },
           });
+          workers.push(worker);
           try {
             await worker.setParameters({
               tessedit_pageseg_mode: Tesseract.PSM.SINGLE_BLOCK,
@@ -513,12 +580,16 @@ function TeleprompterPageInner() {
       } catch {
         // Never fake a transcription: pin the photo as a picture prompt
         // and ask for the text to be typed or pasted instead.
-        setPicture(scanImage);
-        setScanNotice(false);
-        setScanStatus(
-          "Scanning did not work on this photo. The photo is pinned as a picture prompt above the camera — please type or paste the text in the Paste script tab instead.",
-        );
+        if (!phoneTimedOut) {
+          setPicture(scanImage);
+          setScanNotice(false);
+          setScanStatus(
+            "Scanning did not work on this photo. The photo is pinned as a picture prompt above the camera — please type or paste the text in the Paste script tab instead.",
+          );
+        }
       } finally {
+        clearTimeout(phoneTimeoutId);
+        stopScanTimer();
         setScanBusy(false);
       }
   }
@@ -863,6 +934,7 @@ function TeleprompterPageInner() {
                 style={{ marginTop: 12, marginBottom: 0 }}
               >
                 {scanStatus}
+                {scanBusy ? ` ${scanSeconds}s` : ""}
               </p>
             )}
             {scanNotice && (

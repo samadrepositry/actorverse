@@ -136,6 +136,11 @@ export function useRecorder() {
     });
   }, [clearTimer]);
 
+  /** Clear the finished take from the page (e.g. after deleting it). */
+  const clearTake = useCallback(() => {
+    setLastTake(null);
+  }, []);
+
   const startRecording = useCallback(async (): Promise<boolean> => {
     if (recording) return false;
     const current = streamRef.current;
@@ -311,6 +316,7 @@ export function useRecorder() {
     toggleFacing,
     startRecording,
     stopRecording,
+    clearTake,
     closeCamera,
   };
 }

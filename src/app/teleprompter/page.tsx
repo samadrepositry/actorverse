@@ -13,9 +13,14 @@ import { useSearchParams } from "next/navigation";
 import { MONOLOGUES } from "@/data/monologues";
 import { useRecorder, formatClock } from "@/lib/useRecorder";
 import { downloadBlob } from "@/lib/recorder";
-import type { ShotSize } from "@/lib/recorder";
+import type { ShotSize, Take } from "@/lib/recorder";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase";
-import { uploadTake } from "@/lib/recordings";
+import {
+  deleteMyRecording,
+  uploadTake,
+  type RecordingRow,
+  type UploadResult,
+} from "@/lib/recordings";
 import {
   getMyScript,
   listMyScripts,
@@ -61,6 +66,7 @@ function TeleprompterPageInner() {
     toggleFacing,
     startRecording,
     stopRecording,
+    clearTake,
   } = rec;
 
   const [monologueId, setMonologueId] = useState(MONOLOGUES[0].id);
@@ -72,7 +78,14 @@ function TeleprompterPageInner() {
   const [title, setTitle] = useState(MONOLOGUES[0].title);
   const [saving, setSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
-  const [saveOk, setSaveOk] = useState(false);
+  const [saveMessageKind, setSaveMessageKind] = useState<
+    "info" | "success" | "error"
+  >("info");
+  // Auto-save of the finished take: "idle" before the first take,
+  // "saving" while the upload runs, "saved" or "failed" after it lands.
+  const [saveState, setSaveState] = useState<
+    "idle" | "saving" | "saved" | "failed"
+  >("idle");
   const [signedIn, setSignedIn] = useState<boolean | null>(null);
   const [takeUrl, setTakeUrl] = useState<string | null>(null);
   const [source, setSource] = useState<
@@ -94,6 +107,14 @@ function TeleprompterPageInner() {
   // Cleaned photo (grayscale, contrast-stretched) ready for either scan
   // path. The raw photo stays in scanImage for the preview.
   const scanOcrRef = useRef<string | null>(null);
+  // Auto-save bookkeeping: the Studio row of the current take (once the
+  // upload lands), a sequence number per take, a delete request for a
+  // take whose upload was still in flight when Delete was tapped, and
+  // the last take already handed to the auto-save.
+  const savedRowRef = useRef<{ seq: number; row: RecordingRow } | null>(null);
+  const takeSeqRef = useRef(0);
+  const deletePendingSeqRef = useRef<number | null>(null);
+  const lastTakeHandledRef = useRef<Take | null>(null);
 
   const script = useOwn
     ? ownText
@@ -521,7 +542,6 @@ function TeleprompterPageInner() {
 
   async function handleRecordToggle() {
     setSaveMessage(null);
-    setSaveOk(false);
     if (recording) {
       await stopRecording();
       return;
@@ -537,22 +557,114 @@ function TeleprompterPageInner() {
     await startRecording();
   }
 
-  async function handleSaveOnline() {
-    if (!lastTake) return;
-    setSaving(true);
-    setSaveMessage(null);
-    const result = await uploadTake(lastTake, title);
-    setSaveOk(result.ok);
-    setSaveMessage(result.message);
+  /**
+   * Apply one upload result. A take deleted while its upload was in
+   * flight must never remain in Studio, so a landed row for a deleted
+   * take is removed at once. A result for an older take (a new take is
+   * already on screen) never touches the new take's status.
+   */
+  function applySaveResult(result: UploadResult, seq: number) {
+    if (deletePendingSeqRef.current === seq) {
+      deletePendingSeqRef.current = null;
+      if (result.ok && result.row) {
+        void deleteMyRecording(result.row);
+      }
+      return;
+    }
+    if (seq !== takeSeqRef.current) return;
     setSaving(false);
-    if (result.ok) showToast("Take saved to Studio.");
+    if (result.ok) {
+      if (result.row) savedRowRef.current = { seq, row: result.row };
+      setSaveState("saved");
+      setSaveMessage("Saved to Studio.");
+      setSaveMessageKind("success");
+      showToast("Take saved to Studio.");
+    } else {
+      setSaveState("failed");
+      setSaveMessage(
+        "Could not save online — your take is still here. Tap Save to phone to keep it.",
+      );
+      setSaveMessageKind("error");
+    }
+  }
+
+  /** Save one finished take to Studio in the background. */
+  async function saveTakeOnline(take: Take, seq: number) {
+    if (seq === takeSeqRef.current) {
+      setSaving(true);
+      setSaveState("saving");
+      setSaveMessage("Saving to Studio…");
+      setSaveMessageKind("info");
+    }
+    const result = await uploadTake(take, title);
+    applySaveResult(result, seq);
+  }
+
+  /**
+   * A finished take saves itself to Studio — every stop path, including
+   * the 10-minute auto-stop. The title used is the one set when the
+   * take stopped.
+   */
+  useEffect(() => {
+    if (!lastTake || lastTakeHandledRef.current === lastTake) return;
+    lastTakeHandledRef.current = lastTake;
+    takeSeqRef.current += 1;
+    const seq = takeSeqRef.current;
+    savedRowRef.current = null;
+    setSaveState("idle");
+    setSaveMessage(null);
+    void saveTakeOnline(lastTake, seq);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lastTake]);
+
+  /** "Try again" after a failed auto-save. */
+  async function retrySaveOnline() {
+    if (!lastTake || saving) return;
+    const seq = takeSeqRef.current;
+    setSaving(true);
+    setSaveState("saving");
+    setSaveMessage("Saving to Studio…");
+    setSaveMessageKind("info");
+    const result = await uploadTake(lastTake, title);
+    applySaveResult(result, seq);
+  }
+
+  /** Delete this take: confirm first, remove it from Studio too. */
+  async function handleDeleteTake() {
+    if (!lastTake) return;
+    if (!window.confirm("Delete this take? This cannot be undone.")) return;
+    const seq = takeSeqRef.current;
+    const saved = savedRowRef.current;
+    if (saved && saved.seq === seq) {
+      savedRowRef.current = null;
+      const error = await deleteMyRecording(saved.row);
+      clearTake();
+      setTakeError(null);
+      setSaveState("idle");
+      setSaveMessage(null);
+      if (error) {
+        showToast(
+          "Take deleted here, but it could not be removed from Studio. Delete it there.",
+        );
+        return;
+      }
+    } else {
+      // Upload still in flight (or not yet started): the row is deleted
+      // as soon as the upload lands — see applySaveResult.
+      deletePendingSeqRef.current = seq;
+      clearTake();
+      setTakeError(null);
+      setSaveState("idle");
+      setSaveMessage(null);
+    }
+    showToast("Take deleted.");
   }
 
   function handleSaveToPhone() {
     if (!lastTake) return;
     downloadBlob(lastTake.blob, takeFilename(title, lastTake.extension));
-    setSaveOk(true);
     setSaveMessage("Saved to your phone. Check your downloads or gallery.");
+    setSaveMessageKind("success");
     showToast("Saved to your phone.");
   }
 
@@ -1023,34 +1135,44 @@ function TeleprompterPageInner() {
           <div className="rowbtns">
             <button
               type="button"
-              className="btn btn-gold"
-              disabled={saving}
-              onClick={() => void handleSaveOnline()}
-            >
-              {saving ? (
-                <>
-                  <span className="spinner" aria-hidden="true" /> Saving…
-                </>
-              ) : (
-                "Save online"
-              )}
-            </button>
-            <button
-              type="button"
               className="btn btn-dark"
               onClick={handleSaveToPhone}
             >
               Save to phone
             </button>
+            <button
+              type="button"
+              className="btn btn-line"
+              onClick={() => void handleDeleteTake()}
+            >
+              Delete
+            </button>
           </div>
           {saveMessage && (
             <p
-              className={saveOk ? "success" : "error"}
+              className={
+                saveMessageKind === "error"
+                  ? "error"
+                  : saveMessageKind === "success"
+                    ? "success"
+                    : "sub"
+              }
               role="status"
               style={{ marginTop: 12 }}
             >
               {saveMessage}
             </p>
+          )}
+          {saveState === "failed" && lastTake && !lastTake.tooLarge && (
+            <button
+              type="button"
+              className="btn btn-line"
+              disabled={saving}
+              onClick={() => void retrySaveOnline()}
+              style={{ marginTop: 8 }}
+            >
+              Try again
+            </button>
           )}
           {signedIn === false && (
             <p className="note">
@@ -1062,9 +1184,10 @@ function TeleprompterPageInner() {
       )}
 
       <p className="note">
-        <strong>About saving:</strong> the web app saves to your phone with
-        the Save to phone button (a download). True automatic saving to the
-        gallery only exists in a native app.
+        <strong>About saving:</strong> your take saves itself to Studio
+        when you stop recording. Save to phone downloads it to your
+        gallery — true automatic saving to the gallery only exists in a
+        native app.
       </p>
     </section>
   );

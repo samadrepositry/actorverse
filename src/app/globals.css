@@ -887,7 +887,7 @@ h2 {
 }
 .slider-row input[type="range"] {
   width: 100%;
-  accent-color: var(--gold);
+  accent-color: #22c55e; /* Teleprompter speed slider: green, not gold. */
 }
 .record-btn {
   width: 100%;

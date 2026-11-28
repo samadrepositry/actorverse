@@ -6,6 +6,10 @@ import { createClient, isSupabaseConfigured } from "@/lib/supabase";
 import { showToast } from "@/components/Toast";
 
 const PRESETS = [1, 2, 5, 10, 15];
+// Custom time: any length up to 3 hours. Quick pills for the
+// durations the owner named (half an hour, one hour, two hours).
+const CUSTOM_MAX = 180;
+const CUSTOM_QUICK = [30, 60, 120];
 
 function format(seconds: number): string {
   const m = Math.floor(seconds / 60);
@@ -28,6 +32,19 @@ function TimerContent() {
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const loggedRef = useRef(false);
   const autoStartedRef = useRef(false);
+  const [customMinutes, setCustomMinutes] = useState("30");
+
+  // Set a custom duration (1–180 minutes). Behaves exactly like a
+  // preset: sets the time and waits at "Ready" for Start. No auto-start
+  // here — auto-start is only for arriving from "Start with timer".
+  function applyCustom(minutes: number) {
+    const n = Math.min(
+      CUSTOM_MAX,
+      Math.max(1, Math.round(Number.isFinite(minutes) ? minutes : 30)),
+    );
+    setCustomMinutes(String(n));
+    setTimer(n);
+  }
 
   // Check sign-in state once, so we can explain whether the session will save.
   useEffect(() => {
@@ -246,6 +263,66 @@ function TimerContent() {
               {min} min
             </button>
           ))}
+        </div>
+        <div style={{ marginTop: 16 }}>
+          <p className="field-label" style={{ textAlign: "center" }}>
+            Custom time
+          </p>
+          <p className="note" style={{ textAlign: "center", marginTop: 0 }}>
+            Set any time you like — up to 3 hours (180 minutes).
+          </p>
+          <div
+            style={{
+              display: "flex",
+              gap: 8,
+              justifyContent: "center",
+              alignItems: "center",
+              flexWrap: "wrap",
+            }}
+          >
+            <input
+              className="field"
+              type="number"
+              inputMode="numeric"
+              min={1}
+              max={CUSTOM_MAX}
+              step={1}
+              value={customMinutes}
+              aria-label="Custom time in minutes"
+              onChange={(e) => setCustomMinutes(e.target.value)}
+              style={{ width: 120, textAlign: "center", minHeight: 44 }}
+            />
+            <span className="note" style={{ margin: 0 }}>
+              minutes
+            </span>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              style={{ minHeight: 44 }}
+              onClick={() => applyCustom(Number(customMinutes))}
+            >
+              Set time
+            </button>
+          </div>
+          <div
+            className="presets"
+            role="group"
+            aria-label="Custom time quick choices"
+            style={{ marginTop: 10 }}
+          >
+            {CUSTOM_QUICK.map((min) => (
+              <button
+                key={min}
+                type="button"
+                className="preset"
+                style={{ minHeight: 44 }}
+                aria-pressed={total / 60 === min}
+                onClick={() => applyCustom(min)}
+              >
+                {min} min
+              </button>
+            ))}
+          </div>
         </div>
         <div className="rowbtns" style={{ justifyContent: "center" }}>
           <button

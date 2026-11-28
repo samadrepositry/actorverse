@@ -3,7 +3,15 @@ import type { CSSProperties } from "react";
 import AuthForm from "@/components/AuthForm";
 import { createServerSupabaseClient } from "@/lib/supabase-server";
 import { DEPARTMENTS, EXERCISES } from "@/data/exercises";
-import { NAV_ACCENTS, type Accent } from "@/lib/theme";
+import { NAV_ACCENTS, deptAccent, type Accent } from "@/lib/theme";
+import {
+  currentWeekFrom,
+  enrollmentDetailHref,
+  formatEnrolledDate,
+  resolvePlanInput,
+} from "@/lib/planTimetable";
+import type { PlanInput } from "@/lib/planTimetable";
+import type { EnrollmentRow } from "@/lib/plans";
 
 /** Design-system accent vars for a card + its chip, from NAV_ACCENTS.
  *  Sets --card-accent / --card-soft (used by .card-accent) and
@@ -22,6 +30,27 @@ export default async function HomePage() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
+  // The user's real enrolments (own rows only) for the My Enrolled
+  // Courses section. Signed-out users see the sign-in note instead.
+  const myCourses: { row: EnrollmentRow; plan: PlanInput; week: number }[] =
+    [];
+  if (user) {
+    const { data } = await supabase
+      .from("enrollments")
+      .select("id, user_id, plan_id, plan_title, custom_details, created_at")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
+    for (const row of (data ?? []) as EnrollmentRow[]) {
+      const plan = resolvePlanInput(row);
+      if (!plan) continue;
+      myCourses.push({
+        row,
+        plan,
+        week: currentWeekFrom(row.created_at, plan.weeks),
+      });
+    }
+  }
 
   return (
     <>
@@ -112,6 +141,102 @@ export default async function HomePage() {
             <span>Monologues</span>
           </div>
         </div>
+      </section>
+
+      <section className="section" data-page="dashboard">
+        <div className="page-head">
+          <h2>My Enrolled Courses</h2>
+          <span className="accent-bar" aria-hidden="true"></span>
+          <p className="sub">
+            The plans you enrolled in — open one to see its week-by-week
+            timetable. All plans are free — Rs 0.
+          </p>
+        </div>
+        {!user && (
+          <div className="card card-accent" style={dsAccent(NAV_ACCENTS.plans)}>
+            <h3>Sign in to see your enrolled courses</h3>
+            <p>
+              Your enrolled plans and their timetables live here once you
+              sign in.
+            </p>
+            <div className="rowbtns">
+              <Link href="/#signin" className="btn btn-secondary">
+                Sign in
+              </Link>
+              <Link href="/plans" className="btn btn-secondary">
+                Browse plans
+              </Link>
+            </div>
+          </div>
+        )}
+        {user && myCourses.length === 0 && (
+          <div className="card card-accent" style={dsAccent(NAV_ACCENTS.plans)}>
+            <h3>No enrolled courses yet</h3>
+            <p>
+              You have not enrolled in any plan yet. Pick a plan and enrol
+              free — its week-by-week timetable will appear here.
+            </p>
+            <div className="rowbtns">
+              <Link href="/plans" className="btn btn-primary">
+                Browse plans
+              </Link>
+            </div>
+          </div>
+        )}
+        {user && myCourses.length > 0 && (
+          <div className="grid">
+            {myCourses.map(({ row, plan, week }) => {
+              const accent = deptAccent(plan.department);
+              return (
+                <div
+                  key={row.id}
+                  className="card card-accent"
+                  style={
+                    {
+                      "--card-accent": accent.color,
+                      "--card-soft": accent.soft,
+                      display: "flex",
+                      flexDirection: "column",
+                    } as CSSProperties
+                  }
+                >
+                  <span
+                    className="chip"
+                    style={
+                      {
+                        "--dept": accent.color,
+                        "--dept-soft": accent.soft,
+                      } as CSSProperties
+                    }
+                  >
+                    {plan.department} · {plan.weeks} weeks
+                  </span>
+                  <h3>{plan.title}</h3>
+                  <p>{plan.description}</p>
+                  <p style={{ marginTop: 0, marginBottom: 0 }}>
+                    <strong>
+                      Week {week} of {plan.weeks}
+                    </strong>{" "}
+                    <span className="muted">
+                      · enrolled {formatEnrolledDate(row.created_at)}
+                    </span>
+                  </p>
+                  <div
+                    className="rowbtns"
+                    style={{ marginTop: "auto", paddingTop: 14 }}
+                  >
+                    <Link
+                      href={enrollmentDetailHref(row)}
+                      className="btn btn-gold"
+                    >
+                      Open plan
+                    </Link>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </section>
 
       <section className="section" data-page="dashboard">

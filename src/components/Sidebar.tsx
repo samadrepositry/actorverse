@@ -64,6 +64,7 @@ const MAIN_NAV: NavItem[] = [
   { href: "/scripts", label: "Scripts", icon: "scripts" },
   { href: "/monologues", label: "Monologues", icon: "monologues" },
   { href: "/plans", label: "Plans", icon: "plans" },
+  { href: "/my-plans", label: "My Plans", icon: "plans" },
   { href: "/coach", label: "AI Coach", icon: "coach" },
   { href: "/analytics", label: "Analytics", icon: "analytics" },
   { href: "/achievements", label: "Achievements", icon: "achievements" },

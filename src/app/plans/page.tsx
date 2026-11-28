@@ -18,7 +18,9 @@ import {
   unenrol,
 } from "@/lib/plans";
 import type { EnrollmentRow } from "@/lib/plans";
+import { enrollmentDetailHref } from "@/lib/planTimetable";
 import { showToast } from "@/components/Toast";
+import Link from "next/link";
 
 function formatDate(iso: string): string {
   try {
@@ -345,6 +347,12 @@ export default function PlansPage() {
                     </p>
                   )}
                   <div className="rowbtns">
+                    <Link
+                      href={enrollmentDetailHref(row)}
+                      className="btn btn-gold"
+                    >
+                      Open plan
+                    </Link>
                     <button
                       type="button"
                       className="btn btn-line"

@@ -744,6 +744,24 @@ h2 {
   object-fit: cover;
   display: block;
 }
+/* Teleprompter preview: bigger on portrait phones, landscape-friendly.
+   Scoped to the Teleprompter page only ([data-page="teleprompter"]) — the
+   Studio viewfinder keeps its 16/9 box. Guide lines are positioned by %,
+   so they stay at head/feet in the taller box. The preview and RECORD row
+   stay in normal page flow (no sticky/floating bar); recording is only
+   stopped by the user, the 10-minute cap, or leaving the page — scrolling
+   never interrupts it. */
+@media (max-width: 700px) and (orientation: portrait) {
+  [data-page="teleprompter"] .video-wrap {
+    aspect-ratio: 4 / 3;
+  }
+}
+@media (orientation: landscape) and (max-width: 1000px) {
+  [data-page="teleprompter"] .video-wrap {
+    aspect-ratio: auto;
+    height: 78dvh;
+  }
+}
 .video-empty {
   position: absolute;
   inset: 0;

@@ -27,6 +27,7 @@ function TimerContent() {
   const [signedIn, setSignedIn] = useState<boolean | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const loggedRef = useRef(false);
+  const autoStartedRef = useRef(false);
 
   // Check sign-in state once, so we can explain whether the session will save.
   useEffect(() => {
@@ -122,6 +123,20 @@ function TimerContent() {
       });
     }, 1000);
   }
+
+  // Auto-start when arriving from an exercise card's "Start with timer":
+  // the button promises "Start", so the countdown starts by itself
+  // instead of waiting at "Ready" for the gold Start button. Plain
+  // /timer (no exercise param) keeps the old behaviour — "Ready" until
+  // the owner presses Start. The ref guard means StrictMode double
+  // effects (or a re-mount) can never start two intervals.
+  useEffect(() => {
+    if (!exerciseTitle) return;
+    if (autoStartedRef.current) return;
+    autoStartedRef.current = true;
+    handleStartPause();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     return () => {

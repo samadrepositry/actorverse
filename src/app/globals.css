@@ -755,6 +755,13 @@ h2 {
   [data-page="teleprompter"] .video-wrap {
     aspect-ratio: 4 / 3;
   }
+  /* Horizontal recording on a portrait phone: the preview is the wide
+     16/9 box, matching the wide file that will be recorded. The
+     landscape rule below still wins when the phone is actually turned,
+     so rotation behaviour is unchanged. */
+  [data-page="teleprompter"] .video-wrap--wide {
+    aspect-ratio: 16 / 9;
+  }
 }
 @media (orientation: landscape) and (max-width: 1000px) {
   [data-page="teleprompter"] .video-wrap {

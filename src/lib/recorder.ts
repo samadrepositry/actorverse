@@ -11,6 +11,10 @@
 export type ShotSize = "wide" | "medium" | "closeup";
 export type Facing = "user" | "environment";
 
+/** Which shape the recorded video file has. Vertical is the phone held
+ * upright (tall video); Horizontal is the wide 16:9 frame. */
+export type Orientation = "vertical" | "horizontal";
+
 /** How much the picture is zoomed for each shot size. */
 export const SHOT_ZOOM: Record<ShotSize, number> = {
   wide: 1,
@@ -78,11 +82,15 @@ export async function startCamera(facing: Facing): Promise<MediaStream> {
     );
   }
   try {
+    // facingMode is EXACT on purpose: with a soft preference the browser
+    // may silently hand back the other camera (the owner switched to the
+    // back camera once and the front would not come back). Exact either
+    // opens the requested camera or throws an honest error.
     return await navigator.mediaDevices.getUserMedia({
       video: {
         width: { ideal: 1280 },
         height: { ideal: 720 },
-        facingMode: facing,
+        facingMode: { exact: facing },
       },
       audio: true,
     });
@@ -148,22 +156,42 @@ export interface FramedStream {
 }
 
 /**
- * Software fallback when the phone has no camera zoom: draw the camera
- * picture into a canvas, cropped to the chosen shot, and record that.
- * The microphone track is carried over, so the sound stays in sync.
- * Returns null when framing is not needed (Wide) or the canvas fails.
+ * Software fallback when the phone has no camera zoom, and the path that
+ * makes the recorded file match the chosen orientation: draw the camera
+ * picture into a canvas at the target shape and record that. The
+ * microphone track is carried over, so the sound stays in sync.
+ *
+ * Why a canvas is needed for orientation: a phone held upright hands the
+ * browser portrait frames (720x1280), so recording the raw stream always
+ * makes a tall video — the owner's take played back vertical with black
+ * side bars. Drawing into a 1280x720 canvas makes a genuinely wide file
+ * (full-width frame, no side bars); drawing into a 720x1280 canvas makes
+ * a genuinely tall file. The source is cover-cropped to the target shape
+ * first, then the shot zoom is applied inside that crop — so the shot
+ * framing and the orientation never fight each other.
+ *
+ * `hardwareZoomApplied` means the camera already zoomed for the shot, so
+ * the canvas must NOT zoom again (that would double the zoom).
+ * Returns null when framing is not needed (wide shot, horizontal, and
+ * the hardware already zoomed — the raw stream is already right).
  */
 export function createFramedStream(
   source: MediaStream,
   video: HTMLVideoElement,
   shot: ShotSize,
+  orientation: Orientation = "horizontal",
+  hardwareZoomApplied = false,
 ): FramedStream | null {
-  const zoom = SHOT_ZOOM[shot];
-  if (zoom <= 1) return null;
+  // The zoom the canvas itself still has to apply (1 when the camera
+  // already did it, or for a Wide shot).
+  const zoom = hardwareZoomApplied ? 1 : SHOT_ZOOM[shot];
+  if (orientation === "horizontal" && zoom <= 1) return null;
   try {
     const canvas = document.createElement("canvas");
-    canvas.width = 1280;
-    canvas.height = 720;
+    // The recorded file's real size — this is what decides whether the
+    // take plays back wide or tall. Never a vertical video in a wide box.
+    canvas.width = orientation === "vertical" ? 720 : 1280;
+    canvas.height = orientation === "vertical" ? 1280 : 720;
     const ctx = canvas.getContext("2d");
     if (!ctx) return null;
     if (typeof canvas.captureStream !== "function") return null;
@@ -174,11 +202,26 @@ export function createFramedStream(
       const vw = video.videoWidth;
       const vh = video.videoHeight;
       if (vw > 0 && vh > 0) {
-        const sw = vw / zoom;
-        const sh = vh / zoom;
-        const sx = (vw - sw) / 2;
-        const sy = (vh - sh) / 2;
-        ctx.drawImage(video, sx, sy, sw, sh, 0, 0, 1280, 720);
+        // 1) Cover-crop the camera picture to the target shape.
+        const targetAspect = canvas.width / canvas.height;
+        const sourceAspect = vw / vh;
+        let sw: number;
+        let sh: number;
+        if (sourceAspect > targetAspect) {
+          sh = vh;
+          sw = vh * targetAspect;
+        } else {
+          sw = vw;
+          sh = vw / targetAspect;
+        }
+        let sx = (vw - sw) / 2;
+        let sy = (vh - sh) / 2;
+        // 2) Zoom into the centre of that crop for the chosen shot.
+        const zsw = sw / zoom;
+        const zsh = sh / zoom;
+        sx += (sw - zsw) / 2;
+        sy += (sh - zsh) / 2;
+        ctx.drawImage(video, sx, sy, zsw, zsh, 0, 0, canvas.width, canvas.height);
       }
       raf = requestAnimationFrame(draw);
     };

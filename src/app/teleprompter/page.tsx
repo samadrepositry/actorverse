@@ -56,6 +56,7 @@ function TeleprompterPageInner() {
     cameraError,
     shot,
     facing,
+    orientation,
     recording,
     seconds,
     lastTake,
@@ -63,7 +64,7 @@ function TeleprompterPageInner() {
     setTakeError,
     openCamera,
     changeShot,
-    toggleFacing,
+    setOrientation,
     startRecording,
     stopRecording,
     clearTake,
@@ -1005,13 +1006,45 @@ function TeleprompterPageInner() {
               {s.label}
             </button>
           ))}
+        </div>
+        <div className="shot-row" role="group" aria-label="Camera">
           <button
             type="button"
             className="fbtn"
-            disabled={recording}
-            onClick={() => void toggleFacing()}
+            aria-pressed={facing === "user"}
+            disabled={recording || cameraBusy}
+            onClick={() => void openCamera("user", shot)}
           >
-            {facing === "user" ? "Front camera" : "Back camera"} — switch
+            Front camera
+          </button>
+          <button
+            type="button"
+            className="fbtn"
+            aria-pressed={facing === "environment"}
+            disabled={recording || cameraBusy}
+            onClick={() => void openCamera("environment", shot)}
+          >
+            Back camera
+          </button>
+        </div>
+        <div className="shot-row" role="group" aria-label="Recording shape">
+          <button
+            type="button"
+            className="fbtn"
+            aria-pressed={orientation === "vertical"}
+            disabled={recording}
+            onClick={() => setOrientation("vertical")}
+          >
+            Vertical
+          </button>
+          <button
+            type="button"
+            className="fbtn"
+            aria-pressed={orientation === "horizontal"}
+            disabled={recording}
+            onClick={() => setOrientation("horizontal")}
+          >
+            Horizontal
           </button>
         </div>
         <p className="sub" style={{ marginBottom: 8 }}>
@@ -1019,10 +1052,19 @@ function TeleprompterPageInner() {
             ? "Wide Shot: full body, head to feet. Put the phone 2–3 metres away so your feet are visible."
             : shot === "medium"
               ? "Medium Shot: shoulders up."
-              : "Close-up: your face, large and close."}
+              : "Close-up: your face, large and close."}{" "}
+          {orientation === "vertical"
+            ? "Vertical records a tall video — it fills a phone screen top to bottom."
+            : "Horizontal records a wide video — full width, no black side bars. For the widest full-body shot, turn the phone sideways."}
         </p>
 
-        <div className="video-wrap">
+        <div
+          className={
+            orientation === "horizontal"
+              ? "video-wrap video-wrap--wide"
+              : "video-wrap"
+          }
+        >
           <video
             ref={videoRef}
             playsInline

@@ -18,7 +18,13 @@ import {
   startCamera,
   stopStream,
 } from "./recorder";
-import type { Facing, FramedStream, ShotSize, Take } from "./recorder";
+import type {
+  Facing,
+  FramedStream,
+  Orientation,
+  ShotSize,
+  Take,
+} from "./recorder";
 
 export { formatClock } from "./recorder";
 
@@ -31,6 +37,10 @@ export function useRecorder() {
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [shot, setShotState] = useState<ShotSize>("wide");
   const [facing, setFacingState] = useState<Facing>("user");
+  // Tall video by default: the owner holds the phone upright, and the
+  // preview box is the tall 4:3 box. Horizontal is the wide 16:9 file.
+  const [orientation, setOrientationState] =
+    useState<Orientation>("vertical");
   const [hardwareZoom, setHardwareZoom] = useState(false);
   const [recording, setRecording] = useState(false);
   const [seconds, setSeconds] = useState(0);
@@ -40,6 +50,7 @@ export function useRecorder() {
   const streamRef = useRef<MediaStream | null>(null);
   const shotRef = useRef<ShotSize>("wide");
   const facingRef = useRef<Facing>("user");
+  const orientationRef = useRef<Orientation>("vertical");
   const hardwareZoomRef = useRef(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -73,10 +84,18 @@ export function useRecorder() {
       setCameraBusy(true);
       setCameraError(null);
       try {
+        const hadStream = !!streamRef.current;
         if (streamRef.current) stopStream(streamRef.current);
         if (framedRef.current) {
           framedRef.current.stop();
           framedRef.current = null;
+        }
+        // Let the old camera fully release before asking for the other
+        // one: on Android the camera can stay briefly busy after its
+        // tracks stop, and an immediate re-open can fail or hand back
+        // the same camera.
+        if (hadStream) {
+          await new Promise((resolve) => setTimeout(resolve, 250));
         }
         const next = await startCamera(nextFacing);
         streamRef.current = next;
@@ -121,6 +140,17 @@ export function useRecorder() {
     await openCamera(next, shotRef.current);
   }, [recording, openCamera]);
 
+  /** Pick the recorded video's shape. Blocked while recording, like the
+   * shot buttons — the shape is fixed when RECORD starts. */
+  const setOrientation = useCallback(
+    (next: Orientation) => {
+      if (recording) return;
+      setOrientationState(next);
+      orientationRef.current = next;
+    },
+    [recording],
+  );
+
   const stopRecording = useCallback(async (): Promise<Take | null> => {
     const mr = mediaRecorderRef.current;
     if (!mr || mr.state === "inactive") return null;
@@ -154,12 +184,27 @@ export function useRecorder() {
     const picked = pickMimeType();
     mimeRef.current = picked;
 
-    // Decide what to record: the raw stream when the hardware zoom did
-    // the framing, otherwise a canvas stream cropped to the same shot.
+    // Decide what to record. The canvas path is used whenever the
+    // recorded file must differ from the raw camera stream: a Vertical
+    // take is always canvas-drawn (a phone held upright hands the
+    // browser portrait frames, and a Horizontal take from those frames
+    // needs a 1280x720 canvas — recording the raw stream would make a
+    // tall video with black side bars). For a Horizontal take the raw
+    // stream is used only when the hardware zoom already did the
+    // framing; otherwise the canvas crops to the shot.
     let recordStream: MediaStream = current;
     let framed: FramedStream | null = null;
-    if (!hardwareZoomRef.current && shotRef.current !== "wide") {
-      framed = createFramedStream(current, video, shotRef.current);
+    const needCanvas =
+      orientationRef.current === "vertical" ||
+      (!hardwareZoomRef.current && shotRef.current !== "wide");
+    if (needCanvas) {
+      framed = createFramedStream(
+        current,
+        video,
+        shotRef.current,
+        orientationRef.current,
+        hardwareZoomRef.current,
+      );
       if (framed) {
         framedRef.current = framed;
         recordStream = framed.stream;
@@ -304,6 +349,7 @@ export function useRecorder() {
     cameraError,
     shot,
     facing,
+    orientation,
     hardwareZoom,
     previewScale,
     recording,
@@ -314,6 +360,7 @@ export function useRecorder() {
     openCamera,
     changeShot,
     toggleFacing,
+    setOrientation,
     startRecording,
     stopRecording,
     clearTake,
